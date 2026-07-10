@@ -10,17 +10,23 @@ let editQueue: {
     name: string, item: ListItem
 }[] = [];
 
-const fileList = new FileListView();
+let excludedNames = new Set<string>()
+
+const getExcludedFiles = () => {
+    return excludedNames;
+}
+
+const fileList = new FileListView(getExcludedFiles);
 
 function updateQueueNotif() {
     let queuedNotif = NotificationSystem.getNotificationById("queuedTasks");
     if(queuedNotif && editQueue.length < 2) {
         queuedNotif.remove();
     } else if(queuedNotif && editQueue.length > 1) {
-        queuedNotif.setTitle((editQueue.length - 1) + " edits queued");
+        queuedNotif.setTitle((editQueue.length - 1) + " edit(s) queued");
         queuedNotif.moveToBottom();
     } else if(!queuedNotif && editQueue.length > 1) {
-        queuedNotif = NotificationSystem.createInfo({ title: (editQueue.length - 1) + " edits queued", desc: "Waiting for current edit to complete...", id: "queuedTasks"});
+        queuedNotif = NotificationSystem.createInfo({ title: (editQueue.length - 1) + " edit(s) queued", desc: "Waiting for current edit to complete...", id: "queuedTasks"});
         queuedNotif.moveToBottom();
     }
 }
@@ -38,7 +44,8 @@ function updateQueueNotif() {
             queued.left, queued.right, queued.top, queued.bottom,
             queued.name
         );
-        editQueue.shift();
+        let remq = editQueue.shift()!;
+        excludedNames.delete(remq.item.file.name);
         fileList.refresh();
         currentNotif.setCheckmark(true);
         setTimeout(() => {
@@ -70,20 +77,12 @@ fileList.videoOpenEvent.connect(item => {
                 name: trim.videoName,
                 item: item,
             });
+            excludedNames.add(item.file.name);
             updateQueueNotif();
             trim.remove();
             trim = null;
+            fileList.refresh();
             fileList.setVisible(true);
-            const videoItemIndex = fileList.listItems.findIndex((v) => {
-                if(v.file.name == item.file.name)
-                    return true;
-                return false;
-            });
-            if(videoItemIndex != -1) {
-                const listItem = fileList.listItems[videoItemIndex]!;
-                listItem.container.remove();
-                fileList.listItems.splice(videoItemIndex, 1);
-            }
         }
     }, { owners: [ trim.connectionOwner ] });
     trim.backEvent.connect(() => {

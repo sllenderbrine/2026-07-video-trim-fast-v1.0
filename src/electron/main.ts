@@ -72,7 +72,7 @@ async function getVideoDuration(videoPath: string) {
     return Number(hours) * 3600 + Number(minutes) * 60 + Number(seconds);
 }
 
-function getOutputPath(originalPath: string, requestedName?: string) {
+async function getOutputPath(originalPath: string, requestedName?: string) {
     const directory = path.dirname(originalPath);
     const originalExtension = path.extname(originalPath);
     if(!requestedName)
@@ -84,10 +84,35 @@ function getOutputPath(originalPath: string, requestedName?: string) {
     if(trimmedName.includes("/") || trimmedName.includes("\\") || trimmedName.includes("\0"))
         throw new Error("The new video name must not include a path.");
 
-    const outputName = trimmedName.toLowerCase().endsWith(originalExtension.toLowerCase())
-        ? trimmedName
-        : trimmedName + originalExtension;
-    return path.join(directory, outputName);
+    const requestedBaseName = trimmedName.toLowerCase().endsWith(originalExtension.toLowerCase())
+        ? trimmedName.slice(0, -originalExtension.length)
+        : trimmedName;
+    const requestedPath = path.join(directory, requestedBaseName + originalExtension);
+    if(requestedPath === originalPath || !await fileExists(requestedPath))
+        return requestedPath;
+
+    // "test" becomes "test (2)", then "test (3)", and so on. If a numbered
+    // name was explicitly requested, continue counting from that number.
+    const numberMatch = requestedBaseName.match(/^(.*) \((\d+)\)$/);
+    const baseName = numberMatch?.[1] ?? requestedBaseName;
+    let number = numberMatch ? Number(numberMatch[2]) + 1 : 2;
+    while(true) {
+        const candidatePath = path.join(directory, `${baseName} (${number})${originalExtension}`);
+        if(!await fileExists(candidatePath))
+            return candidatePath;
+        number++;
+    }
+}
+
+async function fileExists(filePath: string) {
+    try {
+        await fs.access(filePath);
+        return true;
+    } catch (error) {
+        if((error as NodeJS.ErrnoException).code === "ENOENT")
+            return false;
+        throw error;
+    }
 }
 
 async function setPreservedTimestamps(videoPath: string, birthtime: Date, mtime: Date) {
@@ -184,16 +209,7 @@ async function editAndApply(
     if(trimEnd > duration + NO_EDIT_THRESHOLD_SECONDS)
         throw new Error(`trimEnd (${trimEnd}) is after the video duration (${duration}).`);
 
-    const outputPath = getOutputPath(sourcePath, name);
-    if(outputPath !== sourcePath) {
-        try {
-            await fs.access(outputPath);
-            throw new Error(`A file named "${path.basename(outputPath)}" already exists.`);
-        } catch (error) {
-            if((error as NodeJS.ErrnoException).code !== "ENOENT")
-                throw error;
-        }
-    }
+    const outputPath = await getOutputPath(sourcePath, name);
 
     const hasCrop = cropLeft !== 0 || cropRight !== 0 || cropTop !== 0 || cropBottom !== 0;
     const hasTrim = trimStart > NO_EDIT_THRESHOLD_SECONDS

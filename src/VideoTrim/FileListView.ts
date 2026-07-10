@@ -32,7 +32,7 @@ export class FileListView {
     visible: boolean = true;
     listItems: ListItem[] = [];
     videoOpenEvent: Signal<[item: ListItem]> = new Signal();
-    constructor() {
+    constructor(public getExcludedFiles: () => Set<string>) {
         const accessContainer = document.createElement("div");
         this.accessContainerEl = accessContainer;
         document.body.appendChild(accessContainer);
@@ -151,6 +151,9 @@ export class FileListView {
         for(let i=0; i<videoFiles.length; i++) {
             const file = videoFiles[i]!;
 
+            if(this.getExcludedFiles().has(file.name))
+                continue;
+
             const fileContainer = document.createElement("div");
             videoListContainer.appendChild(fileContainer);
             fileContainer.classList.add("flv-list-file");
@@ -184,7 +187,7 @@ export class FileListView {
         thumbCanvas.height = THUMB_HEIGHT;
         const ctx = Canvas2dUtility.get2dContext(thumbCanvas);
         while(true) {
-            let startIndex = Math.floor(videoListContainer.scrollTop / (THUMB_HEIGHT + THUMB_GAP)) * Math.floor((videoListContainer.clientWidth - THUMB_GAP) / (THUMB_WIDTH + THUMB_GAP));
+            let startIndex = Math.floor(this.containerEl.scrollTop / (THUMB_HEIGHT + THUMB_GAP)) * Math.floor((videoListContainer.clientWidth - THUMB_GAP) / (THUMB_WIDTH + THUMB_GAP));
             let endIndex = MathUtility.pmod(startIndex - 1, listItems.length);
             let i = MathUtility.pmod(startIndex, listItems.length);
             while(true) {
