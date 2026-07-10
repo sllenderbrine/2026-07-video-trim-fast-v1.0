@@ -86,6 +86,13 @@ fileList.videoOpenEvent.connect(item => {
             }
         }
     }, { owners: [ trim.connectionOwner ] });
+    trim.backEvent.connect(() => {
+        if(!trim)
+            return;
+        trim.remove();
+        trim = null;
+        fileList.setVisible(true);
+    }, { owners: null });
 }, { owners: null });
 
 const accessMenu = new AccessMenu([]);

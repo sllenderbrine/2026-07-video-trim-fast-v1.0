@@ -1,8 +1,8 @@
 .trim-view-container {
     position: absolute;
-    left: 0;
+    left: 42px;
     top: 34px;
-    width: 100%;
+    width: calc(100% - 42px);
     height: calc(100% - 34px);
     overflow: hidden;
     user-select: none;
@@ -30,12 +30,21 @@
     cursor: pointer;
 }
 
-.tv-name-container {
+.tv-settings-container {
     position: absolute;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     bottom: 120px;
     left: -80px;
+    width: fit-content;
+    height: fit-content;
+    gap: 10px;
+}
+
+.tv-name-container {
+    position: relative;
+    display: flex;
+    flex-direction: row;
     width: fit-content;
     height: fit-content;
     user-select: none;
@@ -178,4 +187,27 @@
     left: 50%;
     top: 0;
     z-index: 5;
+}
+
+.tv-crop-outline {
+    outline: 3px dashed rgb(238, 68, 68);
+    border-radius: 2px;
+    position: absolute;
+}
+
+.tv-settings-button {
+    position: relative;
+    width: fit-content;
+    height: fit-content;
+    user-select: none;
+    border-radius: 2px;
+    padding: 8px 12px;
+    background-color: rgb(50, 50, 50);
+    outline: 1px solid rgb(150, 150, 150);
+    color: rgb(200, 200, 200);
+    border: none;
+    font-family: monospace;
+    font-size: 14px;
+    cursor: pointer;
+    user-select: none;
 }
