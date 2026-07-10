@@ -19,5 +19,20 @@ declare global {
             }>;
             promptChooseDirectory: () => Promise<string | null>;
         };
+        videoEditApi: {
+            editAndApply: (
+                originalVideoPath: string,
+                trimStart: number,
+                trimEnd: number,
+                cropLeft: number,
+                cropRight: number,
+                cropTop: number,
+                cropBottom: number,
+                name?: string
+            ) => Promise<{
+                path: string;
+                recycledOriginal: boolean;
+            }>;
+        };
     }
 }

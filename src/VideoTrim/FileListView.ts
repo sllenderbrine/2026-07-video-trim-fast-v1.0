@@ -29,7 +29,8 @@ export class FileListView {
     videoLoadingId: number = 0;
     videoDirectory: string = "";
     sortMethod: FlvSortMethod = FlvSortMethod.RECENT;
-    visible: boolean = false;
+    visible: boolean = true;
+    listItems: ListItem[] = [];
     videoOpenEvent: Signal<[item: ListItem]> = new Signal();
     constructor() {
         const accessContainer = document.createElement("div");
@@ -82,6 +83,7 @@ export class FileListView {
         if(!container || this.videoListContainerEl == container) {
             this.videoListContainerEl.remove();
             delete this.videoListContainerEl;
+            this.listItems = [];
         }
     }
     async chooseDirectory() {
@@ -141,6 +143,7 @@ export class FileListView {
                 break;
         }
         const listItems: ListItem[] = [];
+        this.listItems = listItems;
         for(let i=0; i<videoFiles.length; i++) {
             const file = videoFiles[i]!;
 

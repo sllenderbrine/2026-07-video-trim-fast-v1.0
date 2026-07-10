@@ -11,3 +11,26 @@ contextBridge.exposeInMainWorld("fileApi", {
     getDirectoryFileList: (dirPath: string) => ipcRenderer.invoke("get-directory-file-list", dirPath),
     promptChooseDirectory: () => ipcRenderer.invoke("prompt-choose-directory")
 });
+
+contextBridge.exposeInMainWorld("videoEditApi", {
+    editAndApply: (
+        originalVideoPath: string,
+        trimStart: number,
+        trimEnd: number,
+        cropLeft: number,
+        cropRight: number,
+        cropTop: number,
+        cropBottom: number,
+        name?: string
+    ) => ipcRenderer.invoke(
+        "video-edit-and-apply",
+        originalVideoPath,
+        trimStart,
+        trimEnd,
+        cropLeft,
+        cropRight,
+        cropTop,
+        cropBottom,
+        name
+    )
+});

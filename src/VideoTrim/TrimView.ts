@@ -19,6 +19,7 @@ export class TrimView {
     targetSeekTime: number = 0;
     trimStart: number = 0;
     trimEnd: number = 0;
+    videoName: string;
     connectionOwner: ConnectionOwner = new ConnectionOwner();
     constructor(public item: ListItem) {
         const container = document.createElement("div");
@@ -28,12 +29,12 @@ export class TrimView {
 
         const video = document.createElement("video");
         this.videoEl = video;
-        document.body.appendChild(video);
+        container.appendChild(video);
         video.classList.add("tv-video");
 
         const trimContainer = document.createElement("div");
         this.trimContainerEl = trimContainer;
-        document.body.appendChild(trimContainer);
+        container.appendChild(trimContainer);
         trimContainer.classList.add("tv-trim-container");
 
         const timelineHandle = document.createElement("div");
@@ -196,8 +197,12 @@ export class TrimView {
         this.nameLabelEl = nameLabel;
         nameContainer.appendChild(nameLabel);
         nameLabel.classList.add("tv-name-label");
-        nameLabel.textContent = item.file.name.substring(0, item.file.name.length - 4);
         nameLabel.contentEditable = "true";
+        nameLabel.textContent = item.file.name.substring(0, item.file.name.length - 4);
+        this.videoName = nameLabel.textContent;
+        nameLabel.oninput = () => {
+            this.videoName = nameLabel.textContent;
+        };
         const extensionLabel = document.createElement("div");
         nameContainer.appendChild(extensionLabel);
         extensionLabel.classList.add("tv-name-extension");
@@ -252,8 +257,7 @@ export class TrimView {
             this.videoEl.play();
     }
     remove() {
-        this.videoEl.remove();
-        this.trimContainerEl.remove();
+        this.containerEl.remove();
         this.connectionOwner.disconnectAll();
     }
 }
