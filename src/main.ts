@@ -12,6 +12,19 @@ let editQueue: {
 
 const fileList = new FileListView();
 
+function updateQueueNotif() {
+    let queuedNotif = NotificationSystem.getNotificationById("queuedTasks");
+    if(queuedNotif && editQueue.length < 2) {
+        queuedNotif.remove();
+    } else if(queuedNotif && editQueue.length > 1) {
+        queuedNotif.setTitle((editQueue.length - 1) + " edits queued");
+        queuedNotif.moveToBottom();
+    } else if(!queuedNotif && editQueue.length > 1) {
+        queuedNotif = NotificationSystem.createInfo({ title: (editQueue.length - 1) + " edits queued", desc: "Waiting for current edit to complete...", id: "queuedTasks"});
+        queuedNotif.moveToBottom();
+    }
+}
+
 (async () => {
     while(true) {
         await new Promise(res => setTimeout(res, 500));
@@ -19,28 +32,18 @@ const fileList = new FileListView();
             continue;
         const queued = editQueue[0];
         let currentNotif = NotificationSystem.createTask({ title: "Applying Edits", desc: queued.item.file.path + " -> " + queued.name, id: "currentTask" });
-        let queuedNotif = NotificationSystem.getNotificationById("queuedTasks");
-        if(queuedNotif && editQueue.length < 2) {
-            queuedNotif.remove();
-        } else if(queuedNotif && editQueue.length > 1) {
-            queuedNotif.setTitle((editQueue.length - 1) + " edits queued");
-            queuedNotif.moveToBottom();
-        } else if(!queuedNotif && editQueue.length > 1) {
-            queuedNotif = NotificationSystem.createInfo({ title: (editQueue.length - 1) + " edits queued", desc: "Waiting for current edit to complete...", id: "queuedTasks"});
-            queuedNotif.moveToBottom();
-        }
-        console.log("EDITING", queued);
+        updateQueueNotif();
         const res = await window.videoEditApi.editAndApply(
             queued.path, queued.start, queued.end,
             queued.left, queued.right, queued.top, queued.bottom,
             queued.name
         );
-        console.log("COMPLETED", res);
         editQueue.shift();
         fileList.refresh();
         currentNotif.setCheckmark(true);
-        await new Promise(res => setTimeout(res, 500));
-        currentNotif.remove();
+        setTimeout(() => {
+            currentNotif.remove();
+        }, 1000)
     }
 })()
 
@@ -67,6 +70,7 @@ fileList.videoOpenEvent.connect(item => {
                 name: trim.videoName,
                 item: item,
             });
+            updateQueueNotif();
             trim.remove();
             trim = null;
             fileList.setVisible(true);
@@ -91,13 +95,3 @@ accessMenu.containerEl.appendChild(title);
 title.classList.add("access-menu-main-title");
 
 accessMenu.containerEl.appendChild(NotificationSystem.containerEl);
-
-setInterval(() => {
-    let notif = NotificationSystem.createInfo({
-        title: "Testing",
-        desc: "Test Description",
-    });
-    setTimeout(() => {
-        notif.remove();
-    }, 200)
-}, 1000);

@@ -128,8 +128,6 @@ export class Notification {
             { transform: "translateX(0px)", opacity: "1" },
             { transform: "translateX(-50px)", opacity: "0" },
         ], { duration: 500, easing: "ease-in-out" });
-        this.contentEl.style.transform = "translateX(-50px)";
-        this.contentEl.style.opacity = "0";
         setTimeout(() => {
             this.containerEl.remove();
         }, 500);
