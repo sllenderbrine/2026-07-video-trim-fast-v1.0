@@ -1,6 +1,11 @@
 import { Color } from "../Color/Color.js";
+import { ConnectionOwner } from "../EventSignals/ConnectionOwner.js";
+import { renderEvent } from "../EventSignals/events/RenderEvent.js";
+import { HtmlConnection } from "../EventSignals/HtmlConnection.js";
 import { Signal } from "../EventSignals/Signal.js";
 import { joinPaths } from "../Utility/FilePathUtility.js";
+import { clamp, lerp, lerpClamped } from "../Utility/MathUtility.js";
+import { Vec2 } from "../Vectors/Vec2.js";
 
 const PATH_RESOURCES = "..";
 const PATH_ICONS = joinPaths(PATH_RESOURCES, "icons");
@@ -15,9 +20,15 @@ export class ActiveNotification {
     iconType: NotificationIconType = NotificationIconType.NONE;
     timeout: number = -1;
     timeoutStart: number = -1;
+    currentPosition: Vec2 = Vec2.zero();
+    targetPosition: Vec2 = Vec2.zero();
+    targetOffset: Vec2 = Vec2.zero();
+    currentOpacity: number = 0;
+    targetOpacity: number = 1;
     removed: boolean = false;
     removeEvent: Signal<[]> = new Signal();
-    constructor() {
+    connectionOwner: ConnectionOwner = new ConnectionOwner();
+    constructor(public parent: NotificationSystem) {
         this.containerEl = document.createElement("div");
         this.containerEl.classList.add("ntf-container");
 
@@ -37,10 +48,13 @@ export class ActiveNotification {
         this.containerEl.appendChild(this.descriptionEl);
         this.descriptionEl.classList.add("ntf-description");
 
-        this.containerEl.animate([
-            { transform: "translateX(-50px)", opacity: "0", },
-            { transform: "translateX(0px)", opacity: "1", },
-        ], { duration: 500, easing: "ease-in-out" });
+        const tempVec = Vec2.zero();
+        renderEvent.connect(dt => {
+            this.targetPosition.add(this.targetOffset, tempVec);
+            this.currentPosition.lerpClampedSelf(tempVec, dt * 10);
+            this.currentOpacity = lerpClamped(this.currentOpacity, this.targetOpacity, dt * 10);
+            this.updateTransform();
+        }, { owners: [ this.connectionOwner ] });
     }
 
     setTitle(v: string) {
@@ -114,18 +128,36 @@ export class ActiveNotification {
         });
     }
 
+    snapToActualPosition(initialOffset: Vec2 = Vec2.zero()) {
+        this.currentPosition.copy(this.targetPosition).addSelf(initialOffset);
+        this.updateTransform();
+    }
+
+    updateTransform() {
+        const dx = this.currentPosition.x - this.targetPosition.x;
+        const dy = this.currentPosition.y - this.targetPosition.y;
+        this.containerEl.style.transform = `translate(${dx}px, ${dy}px)`;
+        this.containerEl.style.opacity = this.currentOpacity + "";
+    }
+
+    updateTargetPosition() {
+        this.containerEl.style.transform = "";
+        const rect = this.containerEl.getBoundingClientRect();
+        this.targetPosition.fromComponents(rect.left, rect.top);
+        this.updateTransform();
+    }
+
     remove() {
         if(this.removed)
             return;
         this.removed = true;
-        this.removeEvent.fire();
-        this.containerEl.animate([
-            { transform: "translateX(0px)", opacity: "1", },
-            { transform: "translateX(-50px)", opacity: "0", },
-        ], { duration: 500, easing: "ease-in-out" });
+        this.targetOpacity = 0;
+        this.targetOffset.x = -50;
         setTimeout(() => {
             this.containerEl.remove();
-        }, 500);
+            this.parent.updateActiveNotificationsLayout();
+            this.removeEvent.fire();
+        }, 200);
     }
 }
 
@@ -149,10 +181,16 @@ export type ActiveNotificationOptions = {
 export class NotificationSystem {
     activeContainerEl: HTMLDivElement;
     activeNotifications: ActiveNotification[] = [];
+    connectionOwner: ConnectionOwner = new ConnectionOwner();
     constructor() {
         this.activeContainerEl = document.createElement("div");
         this.activeContainerEl.classList.add("ntf-active-container");
+
+        new HtmlConnection(window, "resize", () => {
+            this.updateActiveNotificationsLayout();
+        }, { owners: [ this.connectionOwner ] });
     }
+
     sendActiveNotification({
         title = "",
         iconType = NotificationIconType.INFO,
@@ -161,14 +199,28 @@ export class NotificationSystem {
         description = "",
         timeout = -1,
     }) {
-        const notif = new ActiveNotification();
-        this.activeNotifications.push(notif);
+        const notif = new ActiveNotification(this);
         notif.setTitle(title);
         notif.setIconType(iconType, iconColor);
         notif.setIcon(icon);
         notif.setDescription(description);
         notif.setTimeout(timeout);
         this.activeContainerEl.appendChild(notif.containerEl);
+        this.activeNotifications.push(notif);
+        this.updateActiveNotificationsLayout();
+        notif.snapToActualPosition(Vec2.LEFT.mulScalar(50));
+        notif.removeEvent.connect(() => {
+            const index = this.activeNotifications.indexOf(notif);
+            if(index !== -1) {
+                this.activeNotifications.splice(index, 1);
+            }
+        }, { owners: null });
         return notif;
+    }
+
+    updateActiveNotificationsLayout() {
+        this.activeNotifications.forEach(notif => {
+            notif.updateTargetPosition();
+        });
     }
 }

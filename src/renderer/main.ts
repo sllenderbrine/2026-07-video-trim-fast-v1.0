@@ -1,20 +1,7 @@
 import { NotificationIconType, NotificationSystem } from "./VideoTrim/NotificationSystem.js";
 import { VideoTrimApp } from "./VideoTrim/VideoTrimApp.js";
 
-// const videoTrimApp = new VideoTrimApp();
-
-
-const notificationSystem = new NotificationSystem();
-document.body.appendChild(notificationSystem.activeContainerEl);
-
-setInterval(() => {
-    notificationSystem.sendActiveNotification({
-        title: "Error",
-        iconType: NotificationIconType.ERROR,
-        description: "Error opening directory",
-        timeout: 5,
-    });
-}, 2000);
+const videoTrimApp = new VideoTrimApp();
 
 // import { Notification, NotificationSystem } from "./VideoTrim/NotificationSystem.js";
 // import { FileListView, ListItem } from "./VideoTrim/FileListView.js";

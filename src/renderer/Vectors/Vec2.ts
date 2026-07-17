@@ -35,8 +35,12 @@ export class Vec2 {
     static ONE = Object.freeze(Vec2.fromScalar(1));
     static X_AXIS = Object.freeze(Vec2.fromComponents(1, 0));
     static Y_AXIS = Object.freeze(Vec2.fromComponents(0, 1));
+    static NX_AXIS = Object.freeze(Vec2.negate(Vec2.X_AXIS));
+    static NY_AXIS = Object.freeze(Vec2.negate(Vec2.Y_AXIS));
     static UP = Object.freeze(Vec2.fromComponents(0, 1));
     static RIGHT = Object.freeze(Vec2.fromComponents(1, 0));
+    static DOWN = Object.freeze(Vec2.negate(Vec2.UP));
+    static LEFT = Object.freeze(Vec2.negate(Vec2.RIGHT));
     // Conversions
     static clone(a: Vec2): Vec2 {
         return Vec2.copy(a);
@@ -159,6 +163,12 @@ export class Vec2 {
         return out;
     }
     static lerp(a: Vec2, b: Vec2, t: number, out: Vec2 = Vec2.zero()): Vec2 {
+        out.x = a.x + (b.x - a.x) * t;
+        out.y = a.y + (b.y - a.y) * t;
+        return out;
+    }
+    static lerpClamped(a: Vec2, b: Vec2, t: number, out: Vec2 = Vec2.zero()): Vec2 {
+        t = Math.min(Math.max(t, 0), 1);
         out.x = a.x + (b.x - a.x) * t;
         out.y = a.y + (b.y - a.y) * t;
         return out;
@@ -342,6 +352,9 @@ export class Vec2 {
     lerp(other: Vec2, t: number, out?: Vec2) {
         return Vec2.lerp(this, other, t, out);
     }
+    lerpClamped(other: Vec2, t: number, out?: Vec2) {
+        return Vec2.lerpClamped(this, other, t, out);
+    }
     look(other: Vec2, out?: Vec2) {
         return Vec2.look(this, other, out);
     }
@@ -423,6 +436,9 @@ export class Vec2 {
     }
     lerpSelf(other: Vec2, t: number) {
         return Vec2.lerp(this, other, t, this);
+    }
+    lerpClampedSelf(other: Vec2, t: number) {
+        return Vec2.lerpClamped(this, other, t, this);
     }
     lookSelf(other: Vec2) {
         return Vec2.look(this, other, this);

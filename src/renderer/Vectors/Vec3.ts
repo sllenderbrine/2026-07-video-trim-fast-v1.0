@@ -45,9 +45,15 @@ export class Vec3 {
     static X_AXIS = Object.freeze(Vec3.fromComponents(1, 0, 0));
     static Y_AXIS = Object.freeze(Vec3.fromComponents(0, 1, 0));
     static Z_AXIS = Object.freeze(Vec3.fromComponents(0, 0, 1));
+    static NX_AXIS = Object.freeze(Vec3.negate(Vec3.X_AXIS));
+    static NY_AXIS = Object.freeze(Vec3.negate(Vec3.Y_AXIS));
+    static NZ_AXIS = Object.freeze(Vec3.negate(Vec3.Z_AXIS));
     static FORWARD = Object.freeze(Vec3.fromComponents(0, 0, -1));
     static UP = Object.freeze(Vec3.fromComponents(0, 1, 0));
     static RIGHT = Object.freeze(Vec3.fromComponents(1, 0, 0));
+    static BACK = Object.freeze(Vec3.negate(Vec3.FORWARD));
+    static DOWN = Object.freeze(Vec3.negate(Vec3.UP));
+    static LEFT = Object.freeze(Vec3.negate(Vec3.RIGHT));
     // Conversions
     static clone(a: Vec3): Vec3 {
         return Vec3.copy(a);
@@ -242,6 +248,13 @@ export class Vec3 {
         return out;
     }
     static lerp(a: Vec3, b: Vec3, t: number, out: Vec3 = Vec3.zero()): Vec3 {
+        out.x = a.x + (b.x - a.x) * t;
+        out.y = a.y + (b.y - a.y) * t;
+        out.z = a.z + (b.z - a.z) * t;
+        return out;
+    }
+    static lerpClamped(a: Vec3, b: Vec3, t: number, out: Vec3 = Vec3.zero()): Vec3 {
+        t = Math.min(Math.max(t, 0), 1);
         out.x = a.x + (b.x - a.x) * t;
         out.y = a.y + (b.y - a.y) * t;
         out.z = a.z + (b.z - a.z) * t;
@@ -510,6 +523,9 @@ export class Vec3 {
     lerp(other: Vec3, t: number, out?: Vec3) {
         return Vec3.lerp(this, other, t, out);
     }
+    lerpClamped(other: Vec3, t: number, out?: Vec3) {
+        return Vec3.lerpClamped(this, other, t, out);
+    }
     look(other: Vec3, out?: Vec3) {
         return Vec3.look(this, other, out);
     }
@@ -621,6 +637,9 @@ export class Vec3 {
     }
     lerpSelf(other: Vec3, t: number) {
         return Vec3.lerp(this, other, t, this);
+    }
+    lerpClampedSelf(other: Vec3, t: number) {
+        return Vec3.lerpClamped(this, other, t, this);
     }
     lookSelf(other: Vec3) {
         return Vec3.look(this, other, this);

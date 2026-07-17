@@ -10,6 +10,10 @@ export function lerp(a: number, b: number, t: number) {
     return a + (b - a) * t;
 }
 
+export function lerpClamped(a: number, b: number, t: number) {
+    return a + (b - a) * clamp(t, 0, 1);
+}
+
 export function pmod(x: number, n: number) {
     return ((x % n) + n) % n;
 }

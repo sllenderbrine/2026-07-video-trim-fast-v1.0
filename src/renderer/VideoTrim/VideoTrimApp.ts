@@ -21,8 +21,26 @@ export class VideoTrimApp {
                 },
             ];
         }, null, WindowBarSide.LEFT);
+        
+        const notifBtn = this.windowBar.addIconButton("notification", null, () => {
+
+        }, WindowBarSide.RIGHT, false, 22, 8);
+        const notifCounter = document.createElement("div");
+        notifBtn.containerEl.appendChild(notifCounter);
+        notifCounter.classList.add("wbar-notif-counter");
+        notifCounter.textContent = "1";
+
         this.notificationSystem = new NotificationSystem();
         document.body.appendChild(this.notificationSystem.activeContainerEl);
+
+        setInterval(() => {
+            this.notificationSystem.sendActiveNotification({
+                title: "Error",
+                iconType: NotificationIconType.CHECK,
+                description: "Error opening directory",
+                timeout: 5,
+            });
+        }, 1100);
     }
 
     getExcludedFileNames() {
