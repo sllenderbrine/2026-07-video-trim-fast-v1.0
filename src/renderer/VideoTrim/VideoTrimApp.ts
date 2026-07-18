@@ -1,3 +1,4 @@
+import { ConnectionOwner } from "../EventSignals/ConnectionOwner.js";
 import { FileListView } from "./FileListView.js";
 import { NotificationIconType, NotificationSystem } from "./NotificationSystem.js";
 import { TrimView } from "./TrimView.js";
@@ -9,6 +10,7 @@ export class VideoTrimApp {
     trimView?: TrimView;
     windowBar: WindowBar;
     notificationSystem: NotificationSystem;
+    connectionOwner: ConnectionOwner = new ConnectionOwner();
     constructor() {
         this.fileListView = new FileListView(this.getExcludedFileNames.bind(this));
         this.windowBar = new WindowBar();
@@ -21,10 +23,35 @@ export class VideoTrimApp {
                 },
             ];
         }, null, WindowBarSide.LEFT);
+        this.windowBar.addTextButton("Edit", () => {
+            return [
+                
+            ];
+        }, null, WindowBarSide.LEFT);
+        this.windowBar.addTextButton("View", () => {
+            return [
+                
+            ];
+        }, null, WindowBarSide.LEFT);
+        this.windowBar.addTextButton("Help", () => {
+            return [
+                {
+                    title: "Github ↪",
+                    icon: "github",
+                    data: { action: "open-github-repo" },
+                },
+            ];
+        }, null, WindowBarSide.LEFT);
+
+        this.windowBar.menuButtonClickEvent.connect((e) => {
+            if(e.contextMenuButton != null && e.contextMenuButton.data != null && e.contextMenuButton.data.action != null) {
+                this.runAppAction(e.contextMenuButton.data.action);
+            }
+        }, { owners: [ this.connectionOwner ] });
         
         const notifBtn = this.windowBar.addIconButton("notification", null, () => {
 
-        }, WindowBarSide.RIGHT, false, 22, 8);
+        }, WindowBarSide.RIGHT, false, 22, 16);
         const notifCounter = document.createElement("div");
         notifBtn.containerEl.appendChild(notifCounter);
         notifCounter.classList.add("wbar-notif-counter");
@@ -33,14 +60,20 @@ export class VideoTrimApp {
         this.notificationSystem = new NotificationSystem();
         document.body.appendChild(this.notificationSystem.activeContainerEl);
 
-        setInterval(() => {
-            this.notificationSystem.sendActiveNotification({
-                title: "Error",
-                iconType: NotificationIconType.CHECK,
-                description: "Error opening directory",
-                timeout: 5,
-            });
-        }, 1100);
+        this.notificationSystem.sendActiveNotification({
+            title: "Error",
+            iconType: NotificationIconType.ERROR,
+            description: "Error opening directory",
+            timeout: -1,
+            viewDetails: true,
+        });
+        this.notificationSystem.sendActiveNotification({
+            title: "Success",
+            iconType: NotificationIconType.CHECK,
+            description: "Saved video '...ajdoiajdo.mp4'",
+            timeout: -1,
+            viewDetails: true,
+        });
     }
 
     getExcludedFileNames() {
@@ -70,6 +103,9 @@ export class VideoTrimApp {
         switch(action) {
             case "open-directory":
                 this.promptOpenDirectory();
+                break;
+            case "open-github-repo":
+                window.redirectApi.openGithubRepo();
                 break;
         }
     }

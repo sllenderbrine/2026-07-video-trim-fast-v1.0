@@ -34,5 +34,8 @@ declare global {
                 recycledOriginal: boolean;
             }>;
         };
+        redirectApi: {
+            openGithubRepo: () => void;
+        };
     }
 }

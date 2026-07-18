@@ -34,3 +34,7 @@ contextBridge.exposeInMainWorld("videoEditApi", {
         name
     )
 });
+
+contextBridge.exposeInMainWorld("redirectApi", {
+    openGithubRepo: () => ipcRenderer.send("open-github-repo"),
+});

@@ -262,6 +262,8 @@ function createMainWindow() {
     mainWindow = new BrowserWindow({
         width: 1200,
         height: 800,
+        minWidth: 450,
+        minHeight: 250,
         frame: false,
         autoHideMenuBar: true,
         webPreferences: {
@@ -358,6 +360,11 @@ ipcMain.handle(
     (_, originalVideoPath: string, trimStart: number, trimEnd: number, cropLeft: number, cropRight: number, cropTop: number, cropBottom: number, name?: string) =>
         editAndApply(originalVideoPath, trimStart, trimEnd, cropLeft, cropRight, cropTop, cropBottom, name)
 );
+
+// Redirect API
+ipcMain.on("open-github-repo", (event) => {
+    shell.openExternal("https://github.com/sllenderbrine/2026-07-video-trim-fast-v1.0");
+});
 
 // initialize
 init();

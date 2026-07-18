@@ -4,7 +4,7 @@ import { renderEvent } from "../EventSignals/events/RenderEvent.js";
 import { HtmlConnection } from "../EventSignals/HtmlConnection.js";
 import { Signal } from "../EventSignals/Signal.js";
 import { joinPaths } from "../Utility/FilePathUtility.js";
-import { clamp, lerp, lerpClamped } from "../Utility/MathUtility.js";
+import { clamp, lerp, lerpClamped, roundDecimals } from "../Utility/MathUtility.js";
 import { Vec2 } from "../Vectors/Vec2.js";
 
 const PATH_RESOURCES = "..";
@@ -41,11 +41,11 @@ export class ActiveNotification {
         this.textContentEl.classList.add("ntf-text-content");
 
         this.titleEl = document.createElement("div");
-        this.containerEl.appendChild(this.titleEl);
+        this.textContentEl.appendChild(this.titleEl);
         this.titleEl.classList.add("ntf-title");
 
         this.descriptionEl = document.createElement("div");
-        this.containerEl.appendChild(this.descriptionEl);
+        this.textContentEl.appendChild(this.descriptionEl);
         this.descriptionEl.classList.add("ntf-description");
 
         const tempVec = Vec2.zero();
@@ -54,7 +54,10 @@ export class ActiveNotification {
             this.currentPosition.lerpClampedSelf(tempVec, dt * 10);
             this.currentOpacity = lerpClamped(this.currentOpacity, this.targetOpacity, dt * 10);
             this.updateTransform();
-        }, { owners: [ this.connectionOwner ] });
+            if(this.timeout >= 0 && (performance.now() - this.timeoutStart) / 1000 > this.timeout) {
+                this.remove();
+            }
+        }, { owners: [ this.connectionOwner, this.parent.connectionOwner ] });
     }
 
     setTitle(v: string) {
@@ -65,15 +68,21 @@ export class ActiveNotification {
         this.descriptionEl.textContent = v;
     }
 
-    createIconContainer() {
+    addViewDetailsLink() {
+        this.descriptionEl.innerHTML += ` <span class="ntf-link">View details</span>`;
+    }
+
+    createIconContainer(scale: number = 1) {
         this.iconEl.innerHTML = "";
         const iconContainer = document.createElement("div");
+        this.iconEl.appendChild(iconContainer);
         iconContainer.classList.add("ntf-icon");
+        this.iconEl.style.scale = scale + "";
         return iconContainer;
     }
 
-    createCustomIconContainer(v: string, color: Color) {
-        const iconContainer = this.createIconContainer();
+    createCustomIconContainer(v: string, color: Color, scale: number = 1) {
+        const iconContainer = this.createIconContainer(scale);
         iconContainer.style.color = color.toCss();
         fetch(joinPaths(PATH_ICONS, v + ".svg")).then(res => res.text()).then(text => {
             iconContainer.innerHTML = text;
@@ -87,9 +96,10 @@ export class ActiveNotification {
                 this.createCustomIconContainer(this.icon, color);
                 break;
             case NotificationIconType.CHECK:
+                this.createCustomIconContainer("check-circle", Color.fromRgb(30, 205, 55), 1);
                 break;
             case NotificationIconType.ERROR:
-                this.createCustomIconContainer("small-cross", Color.RED);
+                this.createCustomIconContainer("cross-circle", Color.fromRgb(205, 30, 55), 1.1);
                 break;
             case NotificationIconType.INFO:
                 break;
@@ -101,10 +111,10 @@ export class ActiveNotification {
         }
     }
 
-    setIcon(v: string) {
+    setIcon(v: string, scale: number = 1) {
         this.icon = v;
         if(this.iconType == NotificationIconType.CUSTOM) {
-            const iconContainer = this.createIconContainer();
+            const iconContainer = this.createIconContainer(scale);
             fetch(joinPaths(PATH_ICONS, this.icon + ".svg")).then(res => res.text()).then(text => {
                 iconContainer.innerHTML = text;
             });
@@ -113,19 +123,7 @@ export class ActiveNotification {
 
     setTimeout(v: number) {
         this.timeout = v;
-        let start = performance.now();
-        this.timeoutStart = start;
-        let iid = setInterval(() => {
-            if(start != this.timeoutStart){
-                clearInterval(iid);
-                return
-            }
-            if((performance.now() - start) / 1000 > this.timeout) {
-                this.remove();
-                clearInterval(iid);
-                return
-            }
-        });
+        this.timeoutStart = performance.now();
     }
 
     snapToActualPosition(initialOffset: Vec2 = Vec2.zero()) {
@@ -136,8 +134,8 @@ export class ActiveNotification {
     updateTransform() {
         const dx = this.currentPosition.x - this.targetPosition.x;
         const dy = this.currentPosition.y - this.targetPosition.y;
-        this.containerEl.style.transform = `translate(${dx}px, ${dy}px)`;
-        this.containerEl.style.opacity = this.currentOpacity + "";
+        this.containerEl.style.transform = `translate(${roundDecimals(dx, 0.2)}px, ${roundDecimals(dy, 0.2)}px)`;
+        this.containerEl.style.opacity = roundDecimals(this.currentOpacity, 1) + "";
     }
 
     updateTargetPosition() {
@@ -157,6 +155,7 @@ export class ActiveNotification {
             this.containerEl.remove();
             this.parent.updateActiveNotificationsLayout();
             this.removeEvent.fire();
+            this.connectionOwner.disconnectAll();
         }, 200);
     }
 }
@@ -171,11 +170,14 @@ export enum NotificationIconType {
 }
 
 export type ActiveNotificationOptions = {
-    title: string,
-    iconType: NotificationIconType,
-    icon: string,
-    description: string,
-    timeout: number,
+    title?: string,
+    iconType?: NotificationIconType,
+    icon?: string,
+    iconColor?: Color,
+    description?: string,
+    timeout?: number,
+    viewDetails?: boolean,
+    iconScale?: number,
 };
 
 export class NotificationSystem {
@@ -198,11 +200,13 @@ export class NotificationSystem {
         icon = "",
         description = "",
         timeout = -1,
-    }) {
+        viewDetails = false,
+        iconScale = 1,
+    }: ActiveNotificationOptions = {}) {
         const notif = new ActiveNotification(this);
         notif.setTitle(title);
         notif.setIconType(iconType, iconColor);
-        notif.setIcon(icon);
+        notif.setIcon(icon, iconScale);
         notif.setDescription(description);
         notif.setTimeout(timeout);
         this.activeContainerEl.appendChild(notif.containerEl);
@@ -215,6 +219,9 @@ export class NotificationSystem {
                 this.activeNotifications.splice(index, 1);
             }
         }, { owners: null });
+        if(viewDetails) {
+            notif.addViewDetailsLink();
+        }
         return notif;
     }
 

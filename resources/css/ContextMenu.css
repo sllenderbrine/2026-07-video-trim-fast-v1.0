@@ -10,6 +10,8 @@
     font-family: Arial;
     color: white;
     z-index: 1000;
+    min-width: 80px;
+    min-height: 10px;
 }
 
 .ctxm-button-container {

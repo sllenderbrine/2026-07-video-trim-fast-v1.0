@@ -162,15 +162,15 @@ export class WindowBar {
 
         this.addIconButton("small-cross", null, () => {
             window.windowApi.close()
-        }, WindowBarSide.RIGHT, true, 24, 14);
+        }, WindowBarSide.RIGHT, true, 24, 22);
 
         this.addIconButton("maximize", null, () => {
             window.windowApi.maximize()
-        }, WindowBarSide.RIGHT, false, 13, 14);
+        }, WindowBarSide.RIGHT, false, 13, 22);
 
         this.addIconButton("dash", null, () => {
             window.windowApi.minimize()
-        }, WindowBarSide.RIGHT, false, 14, 14);
+        }, WindowBarSide.RIGHT, false, 14, 22);
     }
 
     addTextButton(

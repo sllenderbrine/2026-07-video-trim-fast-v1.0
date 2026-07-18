@@ -7,7 +7,7 @@
     color: white;
     font-family: Arial;
     font-size: 14px;
-    z-index: 100;
+    z-index: 20;
 }
 
 .wbar-left {
@@ -39,7 +39,7 @@
     user-select: none;
     -webkit-app-region: no-drag;
     background-color: transparent;
-    padding: 0px 16px;
+    padding: 0px 12px;
     text-align: center;
     align-items: center;
 }

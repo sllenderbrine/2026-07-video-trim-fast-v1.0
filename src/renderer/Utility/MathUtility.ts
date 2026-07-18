@@ -17,3 +17,8 @@ export function lerpClamped(a: number, b: number, t: number) {
 export function pmod(x: number, n: number) {
     return ((x % n) + n) % n;
 }
+
+export function roundDecimals(x: number, decimals: number) {
+    const p10 = Math.pow(10, decimals);
+    return Math.round(x * p10) / p10;
+}
