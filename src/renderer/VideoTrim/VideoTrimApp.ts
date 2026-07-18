@@ -49,16 +49,7 @@ export class VideoTrimApp {
             }
         }, { owners: [ this.connectionOwner ] });
         
-        const notifBtn = this.windowBar.addIconButton("notification", null, () => {
-
-        }, WindowBarSide.RIGHT, false, 22, 16);
-        const notifCounter = document.createElement("div");
-        notifBtn.containerEl.appendChild(notifCounter);
-        notifCounter.classList.add("wbar-notif-counter");
-        notifCounter.textContent = "1";
-        notifBtn.buttonEl.style.backgroundColor = "rgb(50, 50, 50)";
-
-        this.notificationSystem = new NotificationSystem();
+        this.notificationSystem = new NotificationSystem(this.windowBar);
         document.body.appendChild(this.notificationSystem.activeContainerEl);
 
         this.notificationSystem.sendActiveNotification({

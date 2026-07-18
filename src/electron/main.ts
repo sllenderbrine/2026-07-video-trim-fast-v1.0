@@ -33,6 +33,7 @@ function createMainWindow() {
         minHeight: 250,
         frame: false,
         autoHideMenuBar: true,
+        icon: path.join(__dirname, "../../resources/icons/app.ico"),
         webPreferences: {
             preload: path.join(__dirname, "preload.cjs"),
             contextIsolation: true,
