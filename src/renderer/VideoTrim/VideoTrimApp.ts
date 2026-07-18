@@ -56,6 +56,7 @@ export class VideoTrimApp {
         notifBtn.containerEl.appendChild(notifCounter);
         notifCounter.classList.add("wbar-notif-counter");
         notifCounter.textContent = "1";
+        notifBtn.buttonEl.style.backgroundColor = "rgb(50, 50, 50)";
 
         this.notificationSystem = new NotificationSystem();
         document.body.appendChild(this.notificationSystem.activeContainerEl);

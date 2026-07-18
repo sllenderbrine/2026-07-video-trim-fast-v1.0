@@ -16,6 +16,7 @@ export class ActiveNotification {
     titleEl: HTMLDivElement;
     iconEl: HTMLDivElement;
     descriptionEl: HTMLDivElement;
+    closeButtonEl?: HTMLButtonElement;
     icon: string = "";
     iconType: NotificationIconType = NotificationIconType.NONE;
     timeout: number = -1;
@@ -60,6 +61,24 @@ export class ActiveNotification {
         }, { owners: [ this.connectionOwner, this.parent.connectionOwner ] });
     }
 
+    setCloseButton(v: boolean) {
+        if(v && this.closeButtonEl == null) {
+            const btn = document.createElement("button");
+            this.closeButtonEl = btn;
+            this.containerEl.appendChild(this.closeButtonEl);
+            this.closeButtonEl.classList.add("ntf-close-button");
+            fetch(joinPaths(PATH_ICONS, "small-cross.svg")).then(res => res.text()).then(text => {
+                btn.innerHTML = text;
+            });
+            btn.onclick = () => {
+                this.remove();
+            }
+        } else if(!v && this.closeButtonEl != null) {
+            this.closeButtonEl.remove();
+            delete this.closeButtonEl;
+        }
+    }
+
     setTitle(v: string) {
         this.titleEl.textContent = v;
     }
@@ -87,19 +106,37 @@ export class ActiveNotification {
         fetch(joinPaths(PATH_ICONS, v + ".svg")).then(res => res.text()).then(text => {
             iconContainer.innerHTML = text;
         });
+        return iconContainer;
     }
 
     setIconType(v: NotificationIconType, color: Color) {
         this.iconType = v;
+        let iconContainer: HTMLDivElement;
         switch(v) {
             case NotificationIconType.CUSTOM:
                 this.createCustomIconContainer(this.icon, color);
                 break;
             case NotificationIconType.CHECK:
-                this.createCustomIconContainer("check-circle", Color.fromRgb(30, 205, 55), 1);
+                iconContainer = this.createCustomIconContainer("check-circle", Color.fromRgb(30, 165, 55), 1);
+                iconContainer.style.scale = "0.5";
+                setTimeout(() => {
+                    iconContainer.style.scale = "1";
+                    iconContainer.animate([
+                        { scale: "0.5", },
+                        { scale: "1", },
+                    ], { duration: 500, easing: "cubic-bezier(0.68, -0.55, 0.27, 1.55)" });
+                }, 100);
                 break;
             case NotificationIconType.ERROR:
-                this.createCustomIconContainer("cross-circle", Color.fromRgb(205, 30, 55), 1.1);
+                iconContainer = this.createCustomIconContainer("cross-circle", Color.fromRgb(205, 30, 55), 1.1);
+                iconContainer.style.scale = "0.5";
+                setTimeout(() => {
+                    iconContainer.style.scale = "1";
+                    iconContainer.animate([
+                        { scale: "0.5", },
+                        { scale: "1", },
+                    ], { duration: 500, easing: "cubic-bezier(0.68, -0.55, 0.27, 1.55)" });
+                }, 100);
                 break;
             case NotificationIconType.INFO:
                 break;
@@ -178,6 +215,7 @@ export type ActiveNotificationOptions = {
     timeout?: number,
     viewDetails?: boolean,
     iconScale?: number,
+    canClose?: boolean,
 };
 
 export class NotificationSystem {
@@ -202,6 +240,7 @@ export class NotificationSystem {
         timeout = -1,
         viewDetails = false,
         iconScale = 1,
+        canClose = true,
     }: ActiveNotificationOptions = {}) {
         const notif = new ActiveNotification(this);
         notif.setTitle(title);
@@ -222,6 +261,7 @@ export class NotificationSystem {
         if(viewDetails) {
             notif.addViewDetailsLink();
         }
+        notif.setCloseButton(canClose);
         return notif;
     }
 
