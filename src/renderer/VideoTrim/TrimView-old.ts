@@ -3,7 +3,7 @@ import { HtmlConnection } from "../EventSignals/HtmlConnection.js";
 import { Signal } from "../EventSignals/Signal.js";
 import { clamp } from "../Utility/MathUtility.js";
 import { ContextMenu } from "./ContextMenu.js";
-import type { ListItem } from "./FileListView.js";
+import type { ListItem } from "./FileListView-old.js";
 
 export class TrimView {
     containerEl: HTMLDivElement;

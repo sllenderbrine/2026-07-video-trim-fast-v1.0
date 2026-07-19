@@ -18,6 +18,8 @@ export class ActiveNotification {
     iconEl: HTMLDivElement;
     descriptionEl: HTMLDivElement;
     closeButtonEl?: HTMLButtonElement;
+    progressEl?: HTMLDivElement;
+    progressValueEl?: HTMLDivElement;
     icon: string = "";
     iconType: NotificationIconType = NotificationIconType.NONE;
     timeout: number = -1;
@@ -77,6 +79,16 @@ export class ActiveNotification {
         } else if(!v && this.closeButtonEl != null) {
             this.closeButtonEl.remove();
             delete this.closeButtonEl;
+        }
+    }
+
+    setProgress(v: number) {
+        if(v == -1 && this.progressEl != null) {
+            this.progressEl.remove();
+            return;
+        }
+        if(this.progressEl == null) {
+            
         }
     }
 
@@ -225,31 +237,24 @@ export class NotificationSystem {
     notificationCounter: HTMLDivElement;
     activeNotifications: ActiveNotification[] = [];
     activeNotificationCountChanged: Signal<[count: number]> = new Signal();
-    activeUserClosed: boolean = false;
     activeClosed: boolean = false;
-    activeUserClosedTime: number = -1;
     connectionOwner: ConnectionOwner = new ConnectionOwner();
     constructor(wbar: WindowBar) {
         this.activeContainerEl = document.createElement("div");
         this.activeContainerEl.classList.add("ntf-active-container");
 
         const notifBtn = wbar.addIconButton("notification", null, () => {
-            if(this.activeUserClosed) {
-                if(this.activeNotifications.length == 0) {
-
-                } else {
-                    this.activeUserClosed = false;
-                    this.setActiveClosed(false);
-                }
+            if(this.activeClosed) {
+                this.activeClosed = false;
+                this.setActiveClosed(false);
             } else {
-                if(this.activeNotifications.length == 0) {
-
-                } else {
-                    this.activeUserClosed = true;
-                    this.activeUserClosedTime = performance.now();
-                    this.setActiveClosed(true);
-                }
+                this.activeClosed = true;
+                this.setActiveClosed(true);
             }
+            notifBtn.buttonEl.style.cursor = "default";
+            setTimeout(() => {
+                notifBtn.buttonEl.style.cursor = "pointer";
+            }, 50);
         }, WindowBarSide.RIGHT, false, 22, 16);
         this.notificationButton = notifBtn;
         notifBtn.containerEl.classList.add("wbar-notif");
@@ -257,16 +262,12 @@ export class NotificationSystem {
         notifBtn.containerEl.appendChild(notifCounter);
         notifCounter.classList.add("wbar-notif-counter");
         this.notificationCounter = notifCounter;
-        notifBtn.buttonEl.style.backgroundColor = "rgb(40, 40, 40)";
+        notifCounter.style.display = "none";
+        notifBtn.buttonEl.style.backgroundColor = "rgb(30, 30, 30)";
 
         this.activeNotificationCountChanged.connect(count => {
             notifCounter.textContent = count + "";
-            if(count == 0 && !this.activeClosed) {
-                this.setActiveClosed(true);
-            }
-            if(count > 0 && this.activeClosed && !this.activeUserClosed) {
-                this.setActiveClosed(false);
-            }
+            this.notificationCounter.style.display = !this.activeClosed || this.activeNotifications.length == 0 ? "none" : "block";
         }, { owners: [ this.connectionOwner ], initArgs: [ this.activeNotifications.length ] })
 
         new HtmlConnection(window, "resize", () => {
@@ -279,10 +280,12 @@ export class NotificationSystem {
             this.activeClosed = true;
             this.activeContainerEl.style.display = "none";
             this.notificationButton.buttonEl.style.backgroundColor = "";
+            this.notificationCounter.style.display = this.activeNotifications.length == 0 ? "none" : "block";
         } else {
             this.activeClosed = false;
             this.activeContainerEl.style.display = "flex";
-            this.notificationButton.buttonEl.style.backgroundColor = "rgb(40, 40, 40)";
+            this.notificationButton.buttonEl.style.backgroundColor = "rgb(30, 30, 30)";
+            this.notificationCounter.style.display = "none";
         }
     }
 

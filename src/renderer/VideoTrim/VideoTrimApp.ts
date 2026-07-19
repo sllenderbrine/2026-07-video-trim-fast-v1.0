@@ -1,18 +1,14 @@
 import { ConnectionOwner } from "../EventSignals/ConnectionOwner.js";
-import { FileListView } from "./FileListView.js";
 import { NotificationIconType, NotificationSystem } from "./NotificationSystem.js";
-import { TrimView } from "./TrimView.js";
 import { WindowBar, WindowBarSide } from "./WindowBar.js";
 
 export class VideoTrimApp {
     excludedFileNames: Set<string> = new Set()
-    fileListView: FileListView;
-    trimView?: TrimView;
+    
     windowBar: WindowBar;
     notificationSystem: NotificationSystem;
     connectionOwner: ConnectionOwner = new ConnectionOwner();
     constructor() {
-        this.fileListView = new FileListView(this.getExcludedFileNames.bind(this));
         this.windowBar = new WindowBar();
         this.windowBar.addTextButton("File", () => {
             return [
@@ -46,6 +42,7 @@ export class VideoTrimApp {
         this.windowBar.menuButtonClickEvent.connect((e) => {
             if(e.contextMenuButton != null && e.contextMenuButton.data != null && e.contextMenuButton.data.action != null) {
                 this.runAppAction(e.contextMenuButton.data.action);
+                e.contextMenu!.remove();
             }
         }, { owners: [ this.connectionOwner ] });
         
@@ -66,10 +63,6 @@ export class VideoTrimApp {
             timeout: -1,
             viewDetails: true,
         });
-    }
-
-    getExcludedFileNames() {
-        return this.excludedFileNames;
     }
 
     async promptOpenDirectory() {
