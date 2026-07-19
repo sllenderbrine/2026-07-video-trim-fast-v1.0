@@ -23,6 +23,7 @@ export class VideoTrimApp {
                 {
                     title: "Open Folder...",
                     icon: "folder",
+                    keybind: "Ctrl + O",
                     data: { action: "open-folder", },
                 },
                 {
@@ -62,7 +63,7 @@ export class VideoTrimApp {
         this.notificationSystem = new NotificationSystem(this.windowBar);
         document.body.appendChild(this.notificationSystem.activeContainerEl);
 
-        const vdv = new VideoDirectoryViewer();
+        const vdv = new VideoDirectoryViewer(this.notificationSystem);
         this.vdirViewer = vdv;
         this.contentEl.appendChild(vdv.containerEl);
         

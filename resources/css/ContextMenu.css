@@ -68,6 +68,7 @@
     white-space: nowrap;
     user-select: none;
     pointer-events: none;
+    margin-right: 18px;
 }
 
 .ctxm-separator {
