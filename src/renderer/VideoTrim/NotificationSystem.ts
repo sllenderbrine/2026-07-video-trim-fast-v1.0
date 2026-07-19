@@ -4,7 +4,7 @@ import { renderEvent } from "../EventSignals/events/RenderEvent.js";
 import { HtmlConnection } from "../EventSignals/HtmlConnection.js";
 import { Signal } from "../EventSignals/Signal.js";
 import { joinPaths } from "../Utility/FilePathUtility.js";
-import { clamp, lerp, lerpClamped, roundDecimals } from "../Utility/MathUtility.js";
+import { lerpClamped, roundDecimals } from "../Utility/MathUtility.js";
 import { Vec2 } from "../Vectors/Vec2.js";
 import { WindowBar, WindowBarButton, WindowBarSide } from "./WindowBar.js";
 
@@ -138,7 +138,7 @@ export class ActiveNotification {
                         { scale: "0.5", },
                         { scale: "1", },
                     ], { duration: 500, easing: "cubic-bezier(0.68, -0.55, 0.27, 1.55)" });
-                }, 0);
+                }, 100);
                 break;
             case NotificationIconType.ERROR:
                 iconContainer = this.createCustomIconContainer("cross-circle", Color.fromRgb(205, 30, 55), 1.1);

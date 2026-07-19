@@ -1,0 +1,43 @@
+.startup-container {
+    width: fit-content;
+    height: fit-content;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 35%;
+    color: rgb(200, 200, 200);
+    font-family: monospace;
+}
+
+.startup-content-column {
+    display: flex;
+    flex-direction: column;
+    height: stretch;
+    width: fit-content;
+}
+
+.startup-container h1 {
+    white-space: nowrap;
+    font-size: 34px;
+    margin: 0px 0px;
+    padding: 4px 0px;
+    font-weight: 800;
+    user-select: none;
+}
+
+.startup-container h2 {
+    color: rgb(180, 180, 180);
+    font-size: 20px;
+    font-weight: 200;
+    user-select: none;
+}
+
+.startup-container h3 {
+    color: rgb(100, 100, 100);
+    font-size: 20px;
+    margin: 0px 0px;
+    padding: 4px 0px;
+    font-weight: 200;
+    user-select: none;
+}

@@ -459,3 +459,46 @@ export async function editAndApply(
         };
     }
 }
+
+export async function getVideosInFolder(
+    directory: string
+): Promise<Result<{
+    path: string,
+    name: string,
+    dateModified: number,
+}[], {
+    message: string
+}>> {
+    try {
+        let entries = await fsPromises.readdir(directory, { withFileTypes: true });
+        entries = entries.filter(entry => entry.isFile());
+        const files = await Promise.all(
+            entries.map(async entry => {
+                const fullPath = replaceBackslashesWithForward(path.join(directory, entry.name));
+                const stats = await fsPromises.stat(fullPath);
+
+                return {
+                    path: fullPath,
+                    name: entry.name,
+                    dateModified: stats.mtimeMs,
+                };
+            })
+        );
+
+        return {
+            success: true,
+            value: files,
+        };
+    } catch (error) {
+        if(error instanceof Error) {
+            return {
+                success: false,
+                error: { message: `Error getting videos in folder: ${error.message}` },
+            };
+        }
+        return {
+            success: false,
+            error: { message: `Error getting videos in folder: An unknown error occurred` },
+        };
+    }
+}

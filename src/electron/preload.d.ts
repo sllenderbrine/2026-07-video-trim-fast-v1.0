@@ -9,14 +9,13 @@ declare global {
             move: (dx: number, dy: number) => void;
         };
         fileApi: {
-            getDirectoryFileList: (dirPath: string) => Promise<{
-                files: {
-                    path: string,
-                    name: string,
-                    modified: number
-                }[],
-                success: boolean
-            }>;
+            getDirectoryFileList: (dirPath: string) => Promise<Result<{
+                path: string,
+                name: string,
+                dateModified: number,
+            }[], {
+                message: string
+            }>>;
             promptChooseDirectory: () => Promise<string | null>;
         };
         videoEditApi: {

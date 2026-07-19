@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain, Menu, dialog, shell } from "electron";
 import { fileURLToPath } from "url";
 import fs from "fs/promises";
 import path from "path";
-import { editAndApply } from "./ElectronUtility.js";
+import { editAndApply, getVideosInFolder } from "./ElectronUtility.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -77,36 +77,7 @@ ipcMain.on("window-move", (event, x: number, y: number) => {
 // File API
 ipcMain.handle(
     "get-directory-file-list",
-    async (_, dirPath: string): Promise<{
-        files: {
-            path: string,
-            name: string,
-            modified: number
-        }[],
-        success: boolean
-    }> => {
-        try {
-            let entries = await fs.readdir(dirPath, { withFileTypes: true });
-            entries = entries.filter(entry => entry.isFile());
-            const files = await Promise.all(
-                entries.map(async entry => {
-                    const fullPath = backslashesToForward(path.join(dirPath, entry.name));
-                    const stats = await fs.stat(fullPath);
-
-                    return {
-                        path: fullPath,
-                        name: entry.name,
-                        modified: stats.mtimeMs
-                    };
-                })
-            );
-
-            return { files, success: true };
-        } catch (err) {
-            console.error("Failed to get directory list:", err);
-            return { files: [], success: false };
-        }
-    }
+    async (_, directory: string) => getVideosInFolder(directory),
 );
 
 ipcMain.handle("prompt-choose-directory", async () => {
