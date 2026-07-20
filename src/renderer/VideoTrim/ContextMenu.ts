@@ -18,6 +18,7 @@ export type ContextMenuLayout = {
     children?: ContextMenuLayout[],
     separator?: boolean,
     danger?: boolean,
+    dangerSeparator?: boolean,
 };
 
 export class ContextMenuButtonClickEvent extends EventObject {
@@ -227,7 +228,9 @@ export class ContextMenu {
                         menu.buttonClickEvent.connect((e) => {
                             this.buttonClickEvent.fire(e);
                         }, { owners: [ this.connectionOwner ] });
-                        menu.clickOffEvent.connect(() => {
+                        menu.clickOffEvent.connect((e) => {
+                            if(e.target == btn.buttonEl)
+                                return;
                             menu.remove();
                         }, { owners: [ this.connectionOwner ] });
                         menu.removeEvent.connect(() => {
@@ -292,6 +295,11 @@ export class ContextMenu {
             if(itemLayout.separator) {
                 const separator = document.createElement("div");
                 separator.classList.add("ctxm-separator");
+                this.containerEl.appendChild(separator);
+            }
+            if(itemLayout.dangerSeparator) {
+                const separator = document.createElement("div");
+                separator.classList.add("ctxm-separator-danger");
                 this.containerEl.appendChild(separator);
             }
         }

@@ -34,6 +34,7 @@ export class WindowBarButton {
     buttonEl: HTMLButtonElement;
     titleEl: HTMLDivElement;
     childContextMenu?: ContextMenu;
+    connectionOwner: ConnectionOwner = new ConnectionOwner();
     constructor(
         public parent: WindowBar,
         title: string | null,
@@ -66,6 +67,7 @@ export class WindowBarButton {
                 if(onClick) {
                     onClick();
                 }
+                this.parent.buttonClickEvent.fire(this);
                 if(this.childContextMenu) {
                     this.childContextMenu.remove();
                     delete this.childContextMenu;
@@ -78,12 +80,14 @@ export class WindowBarButton {
                     this.childContextMenu = menu;
                     menu.buttonClickEvent.connect((e) => {
                         parent.menuButtonClickEvent.fire(e);
-                    }, { owners: [ parent.connectionOwner ] });
+                    }, { owners: [ parent.connectionOwner, menu.connectionOwner, this.connectionOwner ] });
                     menu.clickOffEvent.connect((e) => {
                         if(e.target == this.buttonEl)
                             return;
+                        if(e.target && this.parent.elementToButton.get(e.target))
+                            return;
                         menu.remove();
-                    }, { owners: [ parent.connectionOwner ] });
+                    }, { owners: [ parent.connectionOwner, menu.connectionOwner, this.connectionOwner ] });
                     menu.removeEvent.connect(() => {
                         if(this.childContextMenu == menu) {
                             delete this.childContextMenu;
@@ -92,7 +96,12 @@ export class WindowBarButton {
                         if(index !== -1) {
                             parent.contextMenus.splice(index, 1);
                         }
-                    }, { owners: [ parent.connectionOwner ] });
+                    }, { owners: [ parent.connectionOwner, menu.connectionOwner, this.connectionOwner ] });
+                    this.parent.buttonClickEvent.connect(btn => {
+                        if(btn == this)
+                            return;
+                        menu.remove();
+                    }, { owners: [ parent.connectionOwner, menu.connectionOwner, this.connectionOwner ] });
                 }
             });
         }
@@ -149,6 +158,7 @@ export class WindowBar {
     maximizeFunc: () => void;
     minimizeFunc: () => void;
     menuButtonClickEvent: Signal<[e: WindowBarMenuClickEvent]> = new Signal();
+    buttonClickEvent: Signal<[btn: WindowBarButton]> = new Signal();
     connectionOwner: ConnectionOwner = new ConnectionOwner();
     constructor() {
         this.containerEl = document.createElement("div");
@@ -213,7 +223,7 @@ export class WindowBar {
             this.rightContentEl.appendChild(btn.containerEl);
         }
         this.buttons.push(btn);
-        this.elementToButton.set(btn.containerEl, btn);
+        this.elementToButton.set(btn.buttonEl, btn);
         return btn;
     }
     

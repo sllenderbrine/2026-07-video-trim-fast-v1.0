@@ -41,10 +41,16 @@ export class VideoTrimApp {
                         separator: true,
                     },
                     {
+                        title: "Preferences...",
+                        icon: "settings",
+                        separator: true,
+                    },
+                    {
                         title: "Close Folder",
                         icon: "close-folder",
                         data: { action: "close-folder", },
                         disabled: !this.vdirViewer.isLoaded,
+                        dangerSeparator: true,
                     },
                     {
                         title: "Exit",
@@ -185,7 +191,7 @@ export class VideoTrimApp {
         this.windowBar.addTextButton("Help", () => {
             return [
                 {
-                    title: "Github ↪",
+                    title: "↪ Github",
                     icon: "github",
                     data: { action: "open-github-repo" },
                 },
