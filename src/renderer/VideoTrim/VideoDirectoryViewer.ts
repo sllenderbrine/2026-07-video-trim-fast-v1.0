@@ -2,41 +2,76 @@ import { ConnectionOwner } from "../../shared/EventSignals/ConnectionOwner.js";
 import { HtmlConnection } from "../../shared/EventSignals/HtmlConnection.js";
 import { shuffleInPlace } from "../../shared/Utility/ArrayUtility.js";
 import { pmod } from "../../shared/Utility/MathUtility.js";
+import { delay } from "../../shared/Utility/PromiseUtility.js";
 import { formatVideoDuration } from "../../shared/Utility/StringUtility.js";
+import { loadVideo, loadVideoMetadata, seekVideo, unloadVideo } from "../../shared/Utility/VideoUtility.js";
 import { CustomScrollbar } from "../Ui/CustomScrollbar.js";
 import { NotificationIconType, NotificationSystem } from "../Ui/NotificationSystem.js";
 
-async function delay(ms: number) {
-    return new Promise(res => setTimeout(res, ms));
-}
+let allMetadataLoaded = false;
+let metadataCompleteCount = 0;
+let allThumbnailsLoaded = false;
+let thumbnailCompleteCount = 0;
 
-function setVideoSrcAndWaitForMetadata(
-    video: HTMLVideoElement,
-    src: string
-) {
-    return new Promise<boolean>(res => {
-        let connectionOwner = new ConnectionOwner();
-        new HtmlConnection(video, "loadedmetadata", () => {
-            connectionOwner.disconnectAll();
-            res(true);
-        }, { owners: [ connectionOwner ] });
-        new HtmlConnection(video, "error", () => {
-            connectionOwner.disconnectAll();
-            res(false);
-        }, { owners: [ connectionOwner ] });
-        video.src = src;
-    });
-}
+async function startMetadataLoader(vdv: VideoDirectoryViewer) {
+    const video = document.createElement("video");
+    const getIndex = (content: HTMLDivElement) => {
+        let rect = vdv.containerEl.getBoundingClientRect();
+        let gridWidth = Math.floor(rect.width / 160);
+        let index = pmod(Math.floor(content.scrollTop / 120) * gridWidth, vdv.videos.length);
+        if(!Number.isFinite(index))
+            index = 0;
+        return index;
+    }
+    const loadNextMetadata = async () => {
+        const content = vdv.contentEl;
+        if(content == null)
+            return;
+        let index = getIndex(content);
+        let completeCount = 0;
+        while(completeCount < vdv.videos.length && vdv.videos[index]!.hasMetadata) {
+            index = pmod(index + 1, vdv.videos.length);
+            completeCount++;
+        }
+        if(completeCount >= vdv.videos.length) {
+            allMetadataLoaded = true;
+            vdv.progressEl.style.opacity = "0";
+            vdv.progressEl.animate([
+                { opacity: "1", },
+                { opacity: "1", },
+                { opacity: "1", },
+                { opacity: "0", },
+            ], { duration: 700, easing: "ease-out" });
+            return;
+        }
+        const fileView = vdv.videos[index]!;
+        fileView.hasMetadata = true;
+        metadataCompleteCount++;
+        vdv.progressValueEl.getAnimations().forEach(anim => anim.cancel());
+        vdv.progressValueEl.style.width = (metadataCompleteCount / vdv.videos.length * 100) + "%";
 
-function setVideoCurrentTimeAndWait(video: HTMLVideoElement, currentTime: number) {
-    return new Promise<void>(res => {
-        let connectionOwner = new ConnectionOwner();
-        new HtmlConnection(video, "seeked", () => {
-            connectionOwner.disconnectAll();
-            res();
-        }, { owners: [ connectionOwner ] });
-        video.currentTime = currentTime;
-    });
+        const success_src = await loadVideoMetadata(video, fileView.path);
+        if(!success_src)
+            return;
+        
+        fileView.duration = video.duration;
+
+        const durationEl = document.createElement("div");
+        fileView.contentEl.appendChild(durationEl);
+        durationEl.classList.add("vdv-video-duration");
+        durationEl.textContent = "0:00";
+
+        durationEl.textContent = formatVideoDuration(video.duration);
+
+        unloadVideo(video);
+    }
+    while(true) {
+        while(!allMetadataLoaded) {
+            await loadNextMetadata();
+            await delay(1);
+        }
+        await delay(500);
+    }
 }
 
 async function startThumbnailLoader(vdv: VideoDirectoryViewer) {
@@ -54,54 +89,45 @@ async function startThumbnailLoader(vdv: VideoDirectoryViewer) {
         notif.addViewDetailsLink();
         throw new Error("CanvasRenderingContext2D not supported");
     }
-    const iteration = async () => {
-        const content = vdv.contentEl;
-        if(content == null) {
-            await delay(500);
-            return;
-        }
+    const getIndex = (content: HTMLDivElement) => {
         let rect = vdv.containerEl.getBoundingClientRect();
         let gridWidth = Math.floor(rect.width / 160);
-        let startIndex = pmod(Math.floor(content.scrollTop / 120) * gridWidth, vdv.videos.length);
-        if(!Number.isFinite(startIndex))
-            startIndex = 0;
-        let index = startIndex;
-        let hasThumbCount = 0;
-        while(hasThumbCount < vdv.videos.length && vdv.videos[index]!.hasThumbnail) {
+        let index = pmod(Math.floor(content.scrollTop / 120) * gridWidth, vdv.videos.length);
+        if(!Number.isFinite(index))
+            index = 0;
+        return index;
+    }
+    const loadNextThumbnail = async () => {
+        const content = vdv.contentEl;
+        if(content == null)
+            return;
+        let index = getIndex(content);
+        let completeCount = 0;
+        while(completeCount < vdv.videos.length && vdv.videos[index]!.hasThumbnail) {
             index = pmod(index + 1, vdv.videos.length);
-            hasThumbCount++;
+            completeCount++;
         }
-        if(hasThumbCount >= vdv.videos.length) {
-            await delay(500);
+        if(completeCount >= vdv.videos.length) {
+            allThumbnailsLoaded = true;
             return;
         }
         const fileView = vdv.videos[index]!;
+        fileView.hasThumbnail = true;
+        thumbnailCompleteCount++;
+
+        unloadVideo(video);
+        const success_src = await loadVideo(video, fileView.path);
+        if(!success_src)
+            return;
+        await seekVideo(video, 0);
+
+        fileView.duration = video.duration;
 
         const img = document.createElement("img");
         fileView.containerEl.appendChild(img);
         img.classList.add("vdv-video-thumbnail");
         fileView.thumbnailEl = img;
         img.style.display = "none";
-
-        const durationEl = document.createElement("div");
-        fileView.contentEl.appendChild(durationEl);
-        durationEl.classList.add("vdv-video-duration");
-        durationEl.textContent = "0:00";
-
-        fileView.hasThumbnail = true;
-        
-        video.pause();
-        video.removeAttribute("src");
-        video.load();
-        const success_src = await setVideoSrcAndWaitForMetadata(video, fileView.path);
-        if(!success_src) {
-            await delay(10);
-            return;
-        }
-        await setVideoCurrentTimeAndWait(video, 0);
-
-        durationEl.textContent = formatVideoDuration(video.duration);
-        fileView.duration = video.duration;
 
         let sourceWidth = 0;
         let sourceHeight = 0;
@@ -131,7 +157,6 @@ async function startThumbnailLoader(vdv: VideoDirectoryViewer) {
             });
         });
         if(!url) {
-            await delay(10);
             return;
         }
 
@@ -139,13 +164,15 @@ async function startThumbnailLoader(vdv: VideoDirectoryViewer) {
             img.style.display = "block";
         }
         img.src = url;
-
-        await delay(10);
     }
     while(true) {
-        await iteration();
-        if(vdv.sortMethod == VdvSortMethod.DURATION_LONG || vdv.sortMethod == VdvSortMethod.DURATION_SHORT)
-            vdv.updateVideoSort();
+        while(!allThumbnailsLoaded) {
+            await loadNextThumbnail();
+            if(vdv.sortMethod == VdvSortMethod.DURATION_LONG || vdv.sortMethod == VdvSortMethod.DURATION_SHORT)
+                vdv.updateVideoSort();
+            await delay(1);
+        }
+        await delay(500);
     }
 }
 
@@ -157,6 +184,7 @@ export class VdvVideo {
     titleEl: HTMLDivElement;
     duration?: number;
     hasThumbnail: boolean = false;
+    hasMetadata: boolean = false;
     constructor(
         public title: string,
         public path: string,
@@ -198,6 +226,8 @@ export enum VdvSortMethod {
 export class VideoDirectoryViewer {
     containerEl: HTMLDivElement;
     contentEl?: HTMLDivElement;
+    progressEl: HTMLDivElement;
+    progressValueEl: HTMLDivElement;
     scrollbar?: CustomScrollbar;
     videos: VdvVideo[] = [];
     directory: string = "";
@@ -210,7 +240,17 @@ export class VideoDirectoryViewer {
         this.containerEl = document.createElement("div");
         this.containerEl.classList.add("vdv-container");
 
+        this.progressEl = document.createElement("div");
+        this.containerEl.appendChild(this.progressEl);
+        this.progressEl.classList.add("vdv-progress");
+
+        this.progressValueEl = document.createElement("div");
+        this.progressEl.appendChild(this.progressValueEl);
+        this.progressValueEl.classList.add("vdv-progress-value");
+
         startThumbnailLoader(this);
+        startMetadataLoader(this);
+        startMetadataLoader(this);
     }
 
     updateVideoSort() {
@@ -282,7 +322,15 @@ export class VideoDirectoryViewer {
         }[],
     ) {
         this.unloadVideos();
+        this.progressEl.getAnimations().forEach(anim => anim.cancel());
+        this.progressEl.style.opacity = "1";
         this.isLoaded = true;
+        allMetadataLoaded = false;
+        metadataCompleteCount = 0;
+        allThumbnailsLoaded = false;
+        thumbnailCompleteCount = 0;
+        this.progressValueEl.getAnimations().forEach(anim => anim.cancel());
+        this.progressValueEl.style.width = "0px";
         videos = videos.filter(file => {
             const name = file.name.toLowerCase();
             if(name.endsWith(".mp4"))
@@ -322,5 +370,14 @@ export class VideoDirectoryViewer {
         this.isLoaded = false;
         this.videos.forEach(video => video.remove());
         this.videos = [];
+        if(!allMetadataLoaded) {
+            this.progressEl.style.opacity = "0";
+            this.progressEl.animate([
+                { opacity: "1", },
+                { opacity: "1", },
+                { opacity: "1", },
+                { opacity: "0", },
+            ], { duration: 700, easing: "ease-out", });
+        }
     }
 }

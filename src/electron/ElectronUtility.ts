@@ -4,14 +4,7 @@ import path from "path";
 import fsPromises from "fs/promises";
 import ffmpegPath from "ffmpeg-static";
 import { randomUUID } from "crypto";
-
-export type Result<T, E> = {
-    success: true,
-    value: T,
-} | {
-    success: false,
-    error: E,
-};
+import { Result } from "../shared/Utility/PromiseUtility.js";
 
 export function replaceBackslashesWithForward(str: string) {
     return str.replace(/\\/g, "/");
