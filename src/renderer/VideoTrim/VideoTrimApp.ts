@@ -11,6 +11,7 @@ export class VideoTrimApp {
     startupMenu: StartupMenu;
     windowBar: WindowBar;
     notificationSystem: NotificationSystem;
+    editorOpened: boolean = false;
     connectionOwner: ConnectionOwner = new ConnectionOwner();
     constructor() {
         this.contentEl = document.createElement("div");
@@ -19,60 +20,167 @@ export class VideoTrimApp {
 
         this.windowBar = new WindowBar();
         this.windowBar.addTextButton("File", () => {
-            return [
-                {
-                    title: "Open Folder...",
-                    icon: "folder",
-                    keybind: "Ctrl + O",
-                    data: { action: "open-folder", },
-                },
-                {
-                    title: "Close Folder",
-                    icon: "close-folder",
-                    data: { action: "close-folder", },
-                    disabled: !this.vdirViewer.isLoaded,
-                },
-            ];
+            if(this.editorOpened) {
+                return [
+
+                ];
+            } else {
+                return [
+                    {
+                        title: "Open Folder...",
+                        icon: "folder",
+                        keybind: "Ctrl + O",
+                        data: { action: "open-folder", },
+                    },
+                    {
+                        title: "Recents",
+                        icon: "library",
+                        children: [
+
+                        ],
+                        separator: true,
+                    },
+                    {
+                        title: "Close Folder",
+                        icon: "close-folder",
+                        data: { action: "close-folder", },
+                        disabled: !this.vdirViewer.isLoaded,
+                    },
+                    {
+                        title: "Exit",
+                        icon: "small-cross",
+                        data: { action: "exit", },
+                        danger: true,
+                    },
+                ];
+            }
         }, null, WindowBarSide.LEFT);
         this.windowBar.addTextButton("Edit", () => {
-            return [
-                
-            ];
+            if(this.editorOpened) {
+                return [
+                    {
+                        title: "Undo",
+                        keybind: "Ctrl + Z",
+                        icon: "undo",
+                        data: { action: "undo-editor", },
+                    },
+                    {
+                        title: "Redo",
+                        keybind: "Ctrl + Shift + Z",
+                        icon: "redo",
+                        data: { action: "redo-editor", },
+                    },
+                ];
+            } else {
+                return [
+                    
+                ];
+            }
         }, null, WindowBarSide.LEFT);
         this.windowBar.addTextButton("View", () => {
-            return [
-                {
-                    title: "Sort By",
-                    icon: "sort-down",
-                    children: [
-                        {
-                            title: "Recent",
-                            icon: this.vdirViewer.sortMethod == VdvSortMethod.RECENT ? "small-check" : undefined,
-                            data: { action: "sort-recent", },
-                        },
-                        {
-                            title: "Old",
-                            icon: this.vdirViewer.sortMethod == VdvSortMethod.OLD ? "small-check" : undefined,
-                            data: { action: "sort-old", },
-                        },
-                        {
-                            title: "A-Z",
-                            icon: this.vdirViewer.sortMethod == VdvSortMethod.A_Z ? "small-check" : undefined,
-                            data: { action: "sort-az", },
-                        },
-                        {
-                            title: "Z-A",
-                            icon: this.vdirViewer.sortMethod == VdvSortMethod.Z_A ? "small-check" : undefined,
-                            data: { action: "sort-za", },
-                        },
-                        {
-                            title: "Random",
-                            icon: this.vdirViewer.sortMethod == VdvSortMethod.RANDOM ? "small-check" : undefined,
-                            data: { action: "sort-random", },
-                        },
-                    ],
-                },
-            ];
+            if(this.editorOpened) {
+                return [
+
+                ];
+            } else {
+                return [
+                    {
+                        title: "Sort By",
+                        icon: "sort-down",
+                        children: [
+                            {
+                                title: "Date",
+                                icon: (
+                                    this.vdirViewer.sortMethod == VdvSortMethod.DATE_RECENT
+                                    || this.vdirViewer.sortMethod == VdvSortMethod.DATE_OLD
+                                ) ? "small-check" : undefined,
+                                children: [
+                                    {
+                                        title: "Recent",
+                                        icon: this.vdirViewer.sortMethod == VdvSortMethod.DATE_RECENT ? "small-check" : undefined,
+                                        data: { action: "sort-date-recent", },
+                                    },
+                                    {
+                                        title: "Old",
+                                        icon: this.vdirViewer.sortMethod == VdvSortMethod.DATE_OLD ? "small-check" : undefined,
+                                        data: { action: "sort-date-old", },
+                                    },
+                                ],
+                            },
+                            {
+                                title: "Name",
+                                icon: (
+                                    this.vdirViewer.sortMethod == VdvSortMethod.NAME_A_Z
+                                    || this.vdirViewer.sortMethod == VdvSortMethod.NAME_Z_A
+                                ) ? "small-check" : undefined,
+                                children: [
+                                    {
+                                        title: "A-Z",
+                                        icon: this.vdirViewer.sortMethod == VdvSortMethod.NAME_A_Z ? "small-check" : undefined,
+                                        data: { action: "sort-name-a-z", },
+                                    },
+                                    {
+                                        title: "Z-A",
+                                        icon: this.vdirViewer.sortMethod == VdvSortMethod.NAME_Z_A ? "small-check" : undefined,
+                                        data: { action: "sort-name-z-a", },
+                                    },
+                                ],
+                            },
+                            {
+                                title: "Duration",
+                                icon: (
+                                    this.vdirViewer.sortMethod == VdvSortMethod.DURATION_LONG
+                                    || this.vdirViewer.sortMethod == VdvSortMethod.DURATION_SHORT
+                                ) ? "small-check" : undefined,
+                                children: [
+                                    {
+                                        title: "Long",
+                                        icon: this.vdirViewer.sortMethod == VdvSortMethod.DURATION_LONG ? "small-check" : undefined,
+                                        data: { action: "sort-duration-long", },
+                                    },
+                                    {
+                                        title: "Short",
+                                        icon: this.vdirViewer.sortMethod == VdvSortMethod.DURATION_SHORT ? "small-check" : undefined,
+                                        data: { action: "sort-duration-short", },
+                                    },
+                                ],
+                            },
+                            {
+                                title: "Size",
+                                icon: (
+                                    this.vdirViewer.sortMethod == VdvSortMethod.SIZE_BIG
+                                    || this.vdirViewer.sortMethod == VdvSortMethod.SIZE_SMALL
+                                ) ? "small-check" : undefined,
+                                children: [
+                                    {
+                                        title: "Big",
+                                        icon: this.vdirViewer.sortMethod == VdvSortMethod.SIZE_BIG ? "small-check" : undefined,
+                                        data: { action: "sort-size-big", },
+                                    },
+                                    {
+                                        title: "Small",
+                                        icon: this.vdirViewer.sortMethod == VdvSortMethod.SIZE_SMALL ? "small-check" : undefined,
+                                        data: { action: "sort-size-small", },
+                                    },
+                                ],
+                            },
+                            {
+                                title: "Other",
+                                icon: (
+                                    this.vdirViewer.sortMethod == VdvSortMethod.OTHER_RANDOM
+                                ) ? "small-check" : undefined,
+                                children: [
+                                    {
+                                        title: "Random",
+                                        icon: this.vdirViewer.sortMethod == VdvSortMethod.OTHER_RANDOM ? "small-check" : undefined,
+                                        data: { action: "sort-random", },
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                ];
+            }
         }, null, WindowBarSide.LEFT);
         this.windowBar.addTextButton("Help", () => {
             return [
@@ -93,6 +201,10 @@ export class VideoTrimApp {
                 parent.remove();
             }
         }, { owners: [ this.connectionOwner ] });
+
+        this.windowBar.closeFunc = () => {
+            this.runAppAction("exit");
+        }
         
         this.notificationSystem = new NotificationSystem(this.windowBar);
         document.body.appendChild(this.notificationSystem.activeContainerEl);
@@ -134,25 +246,44 @@ export class VideoTrimApp {
                 this.vdirViewer.unloadVideos();
                 this.startupMenu.containerEl.style.display = "flex";
                 break;
-            case "sort-recent":
-                this.vdirViewer.sortMethod = VdvSortMethod.RECENT;
+            case "sort-date-recent":
+                this.vdirViewer.sortMethod = VdvSortMethod.DATE_RECENT;
                 this.vdirViewer.updateVideoSort();
                 break;
-            case "sort-old":
-                this.vdirViewer.sortMethod = VdvSortMethod.OLD;
+            case "sort-date-old":
+                this.vdirViewer.sortMethod = VdvSortMethod.DATE_OLD;
                 this.vdirViewer.updateVideoSort();
                 break;
-            case "sort-az":
-                this.vdirViewer.sortMethod = VdvSortMethod.A_Z;
+            case "sort-name-a-z":
+                this.vdirViewer.sortMethod = VdvSortMethod.NAME_A_Z;
                 this.vdirViewer.updateVideoSort();
                 break;
-            case "sort-za":
-                this.vdirViewer.sortMethod = VdvSortMethod.Z_A;
+            case "sort-name-z-a":
+                this.vdirViewer.sortMethod = VdvSortMethod.NAME_Z_A;
+                this.vdirViewer.updateVideoSort();
+                break;
+            case "sort-duration-long":
+                this.vdirViewer.sortMethod = VdvSortMethod.DURATION_LONG;
+                this.vdirViewer.updateVideoSort();
+                break;
+            case "sort-duration-short":
+                this.vdirViewer.sortMethod = VdvSortMethod.DURATION_SHORT;
+                this.vdirViewer.updateVideoSort();
+                break;
+            case "sort-size-big":
+                this.vdirViewer.sortMethod = VdvSortMethod.SIZE_BIG;
+                this.vdirViewer.updateVideoSort();
+                break;
+            case "sort-size-small":
+                this.vdirViewer.sortMethod = VdvSortMethod.SIZE_SMALL;
                 this.vdirViewer.updateVideoSort();
                 break;
             case "sort-random":
-                this.vdirViewer.sortMethod = VdvSortMethod.RANDOM;
+                this.vdirViewer.sortMethod = VdvSortMethod.OTHER_RANDOM;
                 this.vdirViewer.updateVideoSort();
+                break;
+            case "exit":
+                window.windowApi.close();
                 break;
             case "open-github-repo":
                 window.redirectApi.openGithubRepo();

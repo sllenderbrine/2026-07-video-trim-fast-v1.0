@@ -54,11 +54,11 @@ async function startThumbnailLoader(vdv: VideoDirectoryViewer) {
         notif.addViewDetailsLink();
         throw new Error("CanvasRenderingContext2D not supported");
     }
-    while(true) {
+    const iteration = async () => {
         const content = vdv.contentEl;
         if(content == null) {
             await delay(500);
-            continue;
+            return;
         }
         let rect = vdv.containerEl.getBoundingClientRect();
         let gridWidth = Math.floor(rect.width / 160);
@@ -73,7 +73,7 @@ async function startThumbnailLoader(vdv: VideoDirectoryViewer) {
         }
         if(hasThumbCount >= vdv.videos.length) {
             await delay(500);
-            continue;
+            return;
         }
         const fileView = vdv.videos[index]!;
 
@@ -89,17 +89,19 @@ async function startThumbnailLoader(vdv: VideoDirectoryViewer) {
         durationEl.textContent = "0:00";
 
         fileView.hasThumbnail = true;
+        
         video.pause();
         video.removeAttribute("src");
         video.load();
         const success_src = await setVideoSrcAndWaitForMetadata(video, fileView.path);
         if(!success_src) {
             await delay(10);
-            continue;
+            return;
         }
         await setVideoCurrentTimeAndWait(video, 0);
 
         durationEl.textContent = formatVideoDuration(video.duration);
+        fileView.duration = video.duration;
 
         let sourceWidth = 0;
         let sourceHeight = 0;
@@ -129,7 +131,8 @@ async function startThumbnailLoader(vdv: VideoDirectoryViewer) {
             });
         });
         if(!url) {
-            continue;
+            await delay(10);
+            return;
         }
 
         img.onload = () => {
@@ -139,6 +142,11 @@ async function startThumbnailLoader(vdv: VideoDirectoryViewer) {
 
         await delay(10);
     }
+    while(true) {
+        await iteration();
+        if(vdv.sortMethod == VdvSortMethod.DURATION_LONG || vdv.sortMethod == VdvSortMethod.DURATION_SHORT)
+            vdv.updateVideoSort();
+    }
 }
 
 export class VdvVideo {
@@ -147,6 +155,7 @@ export class VdvVideo {
     thumbnailEl?: HTMLImageElement;
     thumbnailUrl?: string = "";
     titleEl: HTMLDivElement;
+    duration?: number;
     hasThumbnail: boolean = false;
     constructor(
         public title: string,
@@ -175,11 +184,15 @@ export class VdvVideo {
 }
 
 export enum VdvSortMethod {
-    RECENT = 0,
-    OLD = 1,
-    A_Z = 2,
-    Z_A = 3,
-    RANDOM = 4,
+    DATE_RECENT = 0,
+    DATE_OLD = 1,
+    NAME_A_Z = 2,
+    NAME_Z_A = 3,
+    DURATION_LONG = 5,
+    DURATION_SHORT = 6,
+    SIZE_BIG = 7,
+    SIZE_SMALL = 8,
+    OTHER_RANDOM = 4,
 };
 
 export class VideoDirectoryViewer {
@@ -189,7 +202,7 @@ export class VideoDirectoryViewer {
     videos: VdvVideo[] = [];
     directory: string = "";
     isLoaded: boolean = false;
-    sortMethod: VdvSortMethod = VdvSortMethod.RECENT;
+    sortMethod: VdvSortMethod = VdvSortMethod.DATE_RECENT;
     connectionOwner: ConnectionOwner = new ConnectionOwner();
     constructor(
         public notificationSystem: NotificationSystem,
@@ -202,27 +215,49 @@ export class VideoDirectoryViewer {
 
     updateVideoSort() {
         switch(this.sortMethod) {
-            case VdvSortMethod.RECENT:
+            case VdvSortMethod.DATE_RECENT:
                 this.sortVideos((a, b) => {
                     return b.dateModified - a.dateModified;
                 });
                 break;
-            case VdvSortMethod.OLD:
+            case VdvSortMethod.DATE_OLD:
                 this.sortVideos((a, b) => {
                     return a.dateModified - b.dateModified;
                 });
                 break;
-            case VdvSortMethod.A_Z:
+            case VdvSortMethod.NAME_A_Z:
                 this.sortVideos((a, b) => {
                     return a.title.localeCompare(b.title);
                 });
                 break;
-            case VdvSortMethod.Z_A:
+            case VdvSortMethod.NAME_Z_A:
                 this.sortVideos((a, b) => {
                     return b.title.localeCompare(a.title);
                 });
                 break;
-            case VdvSortMethod.RANDOM:
+            case VdvSortMethod.DURATION_LONG:
+                this.sortVideos((a, b) => {
+                    if(a.duration != null && b.duration == null)
+                        return -1;
+                    if(a.duration == null && b.duration != null)
+                        return 1;
+                    if(a.duration == null && b.duration == null)
+                        return b.dateModified - a.dateModified;
+                    return b.duration! - a.duration!;
+                });
+                break;
+            case VdvSortMethod.DURATION_SHORT:
+                this.sortVideos((a, b) => {
+                    if(a.duration != null && b.duration == null)
+                        return -1;
+                    if(a.duration == null && b.duration != null)
+                        return 1;
+                    if(a.duration == null && b.duration == null)
+                        return b.dateModified - a.dateModified;
+                    return a.duration! - b.duration!;
+                });
+                break;
+            case VdvSortMethod.OTHER_RANDOM:
                 shuffleInPlace(this.videos);
                 this.videos.forEach(video => this.contentEl!.appendChild(video.containerEl));
                 break;

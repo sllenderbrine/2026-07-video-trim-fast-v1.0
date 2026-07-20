@@ -42,6 +42,14 @@
     background-color: rgb(60, 60, 60);
 }
 
+.ctxm-container-danger {
+    background-image: linear-gradient(to right, rgb(48, 11, 11) 0%, rgb(20, 13, 13) 50%);
+}
+
+.ctxm-container-danger .ctxm-button:hover {
+    background-color: rgb(58, 33, 33);
+}
+
 .ctxm-title {
     position: relative;
     height: 100%;
@@ -53,7 +61,8 @@
     white-space: nowrap;
     user-select: none;
     pointer-events: none;
-    margin-right: 18px;
+    margin-right: auto;
+    padding-right: 18px;
 }
 
 .ctxm-keybind {
@@ -73,8 +82,18 @@
 
 .ctxm-separator {
     position: relative;
-    background-color: rgb(80, 80, 80);
+    background-image: linear-gradient(to right, black 0%, rgb(80, 80, 80) 30%, rgb(80, 80, 80) 70%, black 100%);
+    width: 90%;
     height: 1px;
+    align-self: center;
+}
+
+.ctxm-separator-danger {
+    position: relative;
+    background-image: linear-gradient(to right, black 0%, rgb(87, 19, 19) 30%, rgb(87, 19, 19) 70%, black 100%);
+    width: 90%;
+    height: 1px;
+    align-self: center;
 }
 
 .ctxm-prefix-icon {
@@ -83,7 +102,6 @@
     height: 100%;
     user-select: none;
     pointer-events: none;
-    margin-right: 4px;
 }
 
 .ctxm-suffix-icon {
@@ -92,7 +110,6 @@
     height: 100%;
     user-select: none;
     pointer-events: none;
-    margin-left: 4px;
 }
 
 .ctxm-icon {

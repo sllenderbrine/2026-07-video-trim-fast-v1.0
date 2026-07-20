@@ -17,6 +17,7 @@ export type ContextMenuLayout = {
     data?: any,
     children?: ContextMenuLayout[],
     separator?: boolean,
+    danger?: boolean,
 };
 
 export class ContextMenuButtonClickEvent extends EventObject {
@@ -278,9 +279,21 @@ export class ContextMenu {
                 itemLayout.data,
                 itemLayout.children,
             );
+            if(itemLayout.danger) {
+                item.titleEl.style.color = "rgb(175, 52, 52)";
+                if(item.prefixIconEl) {
+                    item.prefixIconEl.style.color = "rgb(128, 36, 36)";
+                }
+                item.containerEl.classList.add("ctxm-container-danger");
+            }
             this.containerEl.appendChild(item.containerEl);
             this.buttons.push(item);
             this.elementToButton.set(item.buttonEl, item);
+            if(itemLayout.separator) {
+                const separator = document.createElement("div");
+                separator.classList.add("ctxm-separator");
+                this.containerEl.appendChild(separator);
+            }
         }
         return this;
     }

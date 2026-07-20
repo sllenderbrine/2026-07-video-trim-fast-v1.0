@@ -145,6 +145,9 @@ export class WindowBar {
     buttons: WindowBarButton[] = [];
     contextMenus: ContextMenu[] = [];
     elementToButton: Map<EventTarget, WindowBarButton> = new Map();
+    closeFunc: () => void;
+    maximizeFunc: () => void;
+    minimizeFunc: () => void;
     menuButtonClickEvent: Signal<[e: WindowBarMenuClickEvent]> = new Signal();
     connectionOwner: ConnectionOwner = new ConnectionOwner();
     constructor() {
@@ -160,16 +163,28 @@ export class WindowBar {
         this.rightContentEl.classList.add("wbar-right");
         this.containerEl.appendChild(this.rightContentEl);
 
+        this.closeFunc = () => {
+            window.windowApi.close();
+        }
+
+        this.maximizeFunc = () => {
+            window.windowApi.maximize();
+        }
+
+        this.minimizeFunc = () => {
+            window.windowApi.minimize();
+        }
+
         this.addIconButton("small-cross", null, () => {
-            window.windowApi.close()
+            this.closeFunc();
         }, WindowBarSide.RIGHT, true, 24, 22);
 
         this.addIconButton("maximize", null, () => {
-            window.windowApi.maximize()
+            this.maximizeFunc();
         }, WindowBarSide.RIGHT, false, 13, 22);
 
         this.addIconButton("dash", null, () => {
-            window.windowApi.minimize()
+            this.minimizeFunc();
         }, WindowBarSide.RIGHT, false, 14, 22);
     }
 

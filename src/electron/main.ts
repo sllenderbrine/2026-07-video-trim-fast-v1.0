@@ -27,7 +27,7 @@ function endWithForwardSlash(str: string) {
 
 function createMainWindow() {
     mainWindow = new BrowserWindow({
-        width: 1200,
+        width: 1140,
         height: 800,
         minWidth: 450,
         minHeight: 250,
