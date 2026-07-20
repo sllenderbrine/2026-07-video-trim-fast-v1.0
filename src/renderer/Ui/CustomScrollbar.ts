@@ -1,7 +1,7 @@
-import { ConnectionOwner } from "../EventSignals/ConnectionOwner.js";
-import { HtmlConnection } from "../EventSignals/HtmlConnection.js";
-import { joinPaths } from "../Utility/FilePathUtility.js";
-import { clamp } from "../Utility/MathUtility.js";
+import { ConnectionOwner } from "../../shared/EventSignals/ConnectionOwner.js";
+import { HtmlConnection } from "../../shared/EventSignals/HtmlConnection.js";
+import { joinPaths } from "../../shared/Utility/FilePathUtility.js";
+import { clamp } from "../../shared/Utility/MathUtility.js";
 
 const PATH_RESOURCES = "..";
 const PATH_ICONS = joinPaths(PATH_RESOURCES, "icons");

@@ -1,4 +1,4 @@
-import { ConnectionOwner } from "../EventSignals/ConnectionOwner.js";
+import { ConnectionOwner } from "../../shared/EventSignals/ConnectionOwner.js";
 import { NotificationIconType, NotificationSystem } from "../Ui/NotificationSystem.js";
 import { StartupMenu } from "./StartupMenu.js";
 import { VdvSortMethod, VideoDirectoryViewer } from "./VideoDirectoryViewer.js";

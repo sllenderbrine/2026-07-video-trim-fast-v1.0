@@ -1,9 +1,9 @@
-import { ConnectionOwner } from "../EventSignals/ConnectionOwner.js";
-import { EventObject } from "../EventSignals/EventObject.js";
-import { HtmlConnection } from "../EventSignals/HtmlConnection.js";
-import { Signal } from "../EventSignals/Signal.js";
-import { joinPaths } from "../Utility/FilePathUtility.js";
-import { clipEllipses, clipStartEllipses } from "../Utility/StringUtility.js";
+import { ConnectionOwner } from "../../shared/EventSignals/ConnectionOwner.js";
+import { EventObject } from "../../shared/EventSignals/EventObject.js";
+import { HtmlConnection } from "../../shared/EventSignals/HtmlConnection.js";
+import { Signal } from "../../shared/EventSignals/Signal.js";
+import { joinPaths } from "../../shared/Utility/FilePathUtility.js";
+import { clipEllipses, clipStartEllipses } from "../../shared/Utility/StringUtility.js";
 
 const PATH_RESOURCES = "..";
 const PATH_ICONS = joinPaths(PATH_RESOURCES, "icons");

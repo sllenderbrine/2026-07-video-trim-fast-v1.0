@@ -1,7 +1,7 @@
-import { ConnectionOwner } from "../EventSignals/ConnectionOwner.js";
-import { EventObject } from "../EventSignals/EventObject.js";
-import { Signal } from "../EventSignals/Signal.js";
-import { joinPaths } from "../Utility/FilePathUtility.js";
+import { ConnectionOwner } from "../../shared/EventSignals/ConnectionOwner.js";
+import { EventObject } from "../../shared/EventSignals/EventObject.js";
+import { Signal } from "../../shared/EventSignals/Signal.js";
+import { joinPaths } from "../../shared/Utility/FilePathUtility.js";
 import { ContextMenu } from "./ContextMenu.js";
 import { ContextMenuLayout } from "./ContextMenu.js";
 import { ContextMenuButton } from "./ContextMenu.js";

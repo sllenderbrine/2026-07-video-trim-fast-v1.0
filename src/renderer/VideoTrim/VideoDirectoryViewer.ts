@@ -1,8 +1,8 @@
-import { ConnectionOwner } from "../EventSignals/ConnectionOwner.js";
-import { HtmlConnection } from "../EventSignals/HtmlConnection.js";
-import { shuffleInPlace } from "../Utility/ArrayUtility.js";
-import { pmod } from "../Utility/MathUtility.js";
-import { formatVideoDuration } from "../Utility/StringUtility.js";
+import { ConnectionOwner } from "../../shared/EventSignals/ConnectionOwner.js";
+import { HtmlConnection } from "../../shared/EventSignals/HtmlConnection.js";
+import { shuffleInPlace } from "../../shared/Utility/ArrayUtility.js";
+import { pmod } from "../../shared/Utility/MathUtility.js";
+import { formatVideoDuration } from "../../shared/Utility/StringUtility.js";
 import { CustomScrollbar } from "../Ui/CustomScrollbar.js";
 import { NotificationIconType, NotificationSystem } from "../Ui/NotificationSystem.js";
 
